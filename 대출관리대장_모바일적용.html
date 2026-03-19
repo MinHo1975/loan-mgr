@@ -1,0 +1,3347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대출품 관리대장 v3</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
+  --border:#2e3a50;--border2:#3d4d65;
+  --accent:#3b82f6;--accent2:#60a5fa;--accent-dim:rgba(59,130,246,.15);
+  --green:#22c55e;--green-dim:rgba(34,197,94,.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.12);
+  --orange:#f97316;--orange-dim:rgba(249,115,22,.12);
+  --yellow:#eab308;--purple:#a855f7;--purple-dim:rgba(168,85,247,.12);
+  --teal:#14b8a6;--teal-dim:rgba(20,184,166,.12);
+  --text1:#e8edf5;--text2:#94a3b8;--text3:#64748b;
+  --radius:10px;--shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;}
+
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:16px;height:56px;position:sticky;top:0;z-index:200;}
+.header-logo{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;color:var(--accent2);flex-shrink:0;}
+.header-logo svg{width:22px;height:22px;}
+.hd{width:1px;height:22px;background:var(--border);}
+.company-input{background:transparent;border:none;outline:none;color:var(--text2);font-size:13px;font-family:'Noto Sans KR',sans-serif;width:200px;cursor:pointer;}
+.company-input:focus{color:var(--text1);}
+.company-input::placeholder{color:var(--text3);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.date-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);padding:3px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;}
+
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;gap:4px;}
+.tab-btn{padding:12px 20px;border:none;background:transparent;color:var(--text3);font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap;}
+.tab-btn:hover{color:var(--text2);}
+.tab-btn.active{color:var(--accent2);}
+.tab-btn.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);border-radius:2px 2px 0 0;}
+.tbadge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--accent-dim);color:var(--accent2);border-radius:9px;font-size:10px;font-weight:600;padding:0 5px;margin-left:6px;}
+
+.main{padding:24px;max-width:1440px;margin:0 auto;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* STAT */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sc-total::before{background:var(--accent);}
+.sc-active::before{background:var(--orange);}
+.sc-done::before{background:var(--green);}
+.sc-over::before{background:var(--red);}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase;}
+.stat-value{font-size:28px;font-weight:700;font-family:'IBM Plex Mono',monospace;line-height:1;}
+.sc-total .stat-value{color:var(--accent2);}
+.sc-active .stat-value{color:var(--orange);}
+.sc-done .stat-value{color:var(--green);}
+.sc-over .stat-value{color:var(--red);}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* SECTION */
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.sh{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.st{font-size:13px;font-weight:600;color:var(--text1);}
+.sb{padding:18px;}
+
+/* FORM */
+.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.fg2{grid-column:span 2;}
+.fg3{grid-column:span 3;}
+.fl{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;}
+.fl .req{color:var(--red);margin-left:2px;}
+.fi,.fs,.fta{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text1);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.fi::placeholder{color:var(--text3);}
+.fs option{background:var(--bg3);}
+.fta{resize:vertical;min-height:60px;}
+
+/* AUTOCOMPLETE INPUT */
+.ac-wrap{position:relative;}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;z-index:500;max-height:220px;overflow-y:auto;box-shadow:var(--shadow);display:none;}
+.ac-dropdown.open{display:block;}
+.ac-item{padding:8px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s;}
+.ac-item:hover,.ac-item.focused{background:var(--accent-dim);color:var(--accent2);}
+.ac-item-sub{font-size:10px;color:var(--text3);margin-left:auto;}
+.ac-sep{padding:4px 12px;font-size:10px;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;border-top:1px solid var(--border);background:var(--bg4);}
+.ac-empty{padding:12px;font-size:12px;color:var(--text3);text-align:center;}
+
+/* DB CLIENT ROW */
+.db-client-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;}
+.db-client-row .fi{background:var(--bg4);font-size:12px;padding:5px 8px;}
+.db-client-row .fi:focus{border-color:var(--accent);}
+.client-del-btn{width:26px;height:26px;border-radius:6px;background:var(--red-dim);border:1px solid rgba(239,68,68,.2);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:background .15s;}
+.client-del-btn:hover{background:rgba(239,68,68,.25);}
+
+/* QTY STOCK HINT */
+.qty-stock-ok{color:var(--green);}
+.qty-stock-warn{color:var(--orange);}
+.qty-stock-err{color:var(--red);}
+.stock-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+.stock-ok{background:var(--green-dim);color:var(--green);}
+
+/* PART NUMBER TAGS */
+.partno-tag{display:inline-flex;align-items:center;gap:5px;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(20,184,166,.3);border-radius:5px;padding:2px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:500;}
+.partno-tag-del{width:14px;height:14px;border-radius:50%;background:transparent;border:none;color:var(--teal);cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;opacity:.6;}
+.partno-tag-del:hover{opacity:1;background:rgba(20,184,166,.2);}
+.partno-inline{display:inline-flex;align-items:center;gap:3px;background:var(--teal-dim);color:var(--teal);border-radius:4px;padding:1px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;margin:1px;}
+.stock-warn{background:var(--orange-dim);color:var(--orange);}
+.stock-err{background:var(--red-dim);color:var(--red);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.bp{background:var(--accent);color:#fff;}.bp:hover{background:#2563eb;}
+.bs{background:var(--green);color:#fff;}.bs:hover{background:#16a34a;}
+.bo{background:transparent;color:var(--text2);border:1px solid var(--border2);}.bo:hover{background:var(--bg3);color:var(--text1);}
+.bd{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.25);}.bd:hover{background:rgba(239,68,68,.2);}
+.bw{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(249,115,22,.25);}.bw:hover{background:rgba(249,115,22,.2);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-xs{padding:3px 8px;font-size:11px;}
+.fa{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+
+/* FILTER BAR */
+.fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.fbar .fi,.fbar .fs{height:34px;padding:0 10px;font-size:12px;}
+.fbar-date-row{display:flex;align-items:center;gap:4px;}
+.fbar-date-row .fi{width:130px;}
+.sw{position:relative;flex:1;min-width:180px;}
+.sw .fi{width:100%;padding-left:30px;}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;width:14px;height:14px;}
+
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--bg3);}
+th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;cursor:pointer;white-space:nowrap;user-select:none;border-bottom:1px solid var(--border);}
+th:hover{color:var(--text2);}
+.sico{margin-left:4px;opacity:.4;}
+th.sorted .sico{opacity:1;color:var(--accent2);}
+td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr:hover{background:var(--bg3);}
+tbody tr.tr-returned{background:var(--green-dim);}
+tbody tr.tr-returned:hover{background:rgba(34,197,94,.17);}
+tbody tr.tr-overdue td:first-child{border-left:2px solid var(--red);}
+tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px;}
+.bc1{background:rgba(59,130,246,.15);color:var(--accent2);}
+.bc2{background:rgba(234,179,8,.15);color:var(--yellow);}
+.bc3{background:rgba(249,115,22,.15);color:var(--orange);}
+.bc4{background:rgba(148,163,184,.15);color:var(--text2);}
+.br{background:var(--green-dim);color:var(--green);}
+.bp2{background:var(--purple-dim);color:var(--purple);}
+.dday{font-size:11px;font-family:'IBM Plex Mono',monospace;}
+.dday.ok{color:var(--text3);}
+.dday.warn{color:var(--orange);font-weight:600;}
+.dday.late{color:var(--red);font-weight:600;}
+.dday.perm{color:var(--purple);}
+.reto{font-size:18px;font-weight:700;color:var(--green);}
+
+/* PAGINATION */
+.pgn{display:flex;align-items:center;gap:6px;justify-content:center;}
+.pb{min-width:30px;height:30px;border:1px solid var(--border);background:var(--bg3);border-radius:6px;color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.pb:hover{border-color:var(--accent);color:var(--accent2);}
+.pb.act{background:var(--accent);border-color:var(--accent);color:#fff;}
+.pb:disabled{opacity:.3;cursor:default;}
+.pss{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:0 8px;height:30px;cursor:pointer;}
+
+/* MODAL */
+.mo{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.mo.open{opacity:1;pointer-events:all;}
+.md{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:860px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow);transform:translateY(10px);transition:transform .2s;}
+.mo.open .md{transform:translateY(0);}
+.mh{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1;}
+.mt{font-size:15px;font-weight:600;}
+.mc{width:30px;height:30px;border-radius:7px;border:none;background:var(--bg3);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.mc:hover{background:var(--red-dim);color:var(--red);}
+.mb{padding:20px;}
+.mf{padding:13px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg2);}
+
+/* CHECKBOX ROW */
+.cbrow{display:flex;align-items:center;gap:8px;padding:6px 0;}
+.cbrow input[type=checkbox]{width:16px;height:16px;accent-color:var(--purple);cursor:pointer;}
+.cbrow label{font-size:13px;color:var(--text2);cursor:pointer;}
+.perm-badge{display:inline-flex;align-items:center;gap:4px;background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,.3);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;}
+
+/* DB SEARCH PANEL */
+.db-results{max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;}
+.dri{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.dri:last-child{border-bottom:none;}
+.dri:hover{background:var(--accent-dim);}
+.drt{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--bg4);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:18px;overflow:hidden;}
+.drt img{width:44px;height:44px;object-fit:cover;}
+.dri-info{flex:1;min-width:0;}
+.dri-name{font-size:13px;font-weight:600;color:var(--text1);margin-bottom:2px;}
+.dri-sub{font-size:11px;color:var(--text3);}
+
+/* PHOTO */
+.pup{border:2px dashed var(--border2);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
+.pup:hover{border-color:var(--accent);}
+.pup input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.pup-icon{font-size:26px;margin-bottom:4px;}
+.pup-text{font-size:11px;color:var(--text3);}
+.pthw{position:relative;display:inline-block;}
+.pth{width:110px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--border);}
+.pthr{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.photo-prev{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.photo-prev img{width:100%;max-height:130px;object-fit:contain;border-radius:6px;}
+.photo-prev .noph{color:var(--text3);font-size:11px;text-align:center;padding:16px 0;}
+
+/* DB CARD GRID */
+.db-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+.db-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column;}
+.db-card:hover{border-color:var(--border2);}
+.dc-img{width:100%;height:130px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:30px;overflow:hidden;}
+.dc-img img{width:100%;height:130px;object-fit:cover;}
+.dc-body{padding:10px 12px 8px;flex:1;display:flex;flex-direction:column;}
+.dc-id{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;}
+.dc-name{font-size:13px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dc-meta{font-size:11px;color:var(--text3);}
+
+/* CERT */
+.loan-cert{background:#fff;color:#1a1a1a;font-family:'Noto Sans KR',sans-serif;border-radius:8px;overflow:hidden;}
+.cert-hd{background:#1e3a5f;color:#fff;padding:18px 24px;text-align:center;}
+.cert-co{font-size:12px;opacity:.8;margin-bottom:3px;}
+.cert-title{font-size:24px;font-weight:700;letter-spacing:8px;}
+.cert-body{padding:18px 24px;}
+.cert-ig{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #c8d0da;border-radius:6px;overflow:hidden;margin-bottom:14px;}
+.cert-ic{padding:7px 11px;border:1px solid #c8d0da;}
+.cert-il{font-size:10px;font-weight:700;color:#64748b;margin-bottom:2px;text-transform:uppercase;letter-spacing:.4px;}
+.cert-iv{font-size:13px;font-weight:500;color:#1e293b;}
+.cert-table{width:100%;border-collapse:collapse;border:1px solid #c8d0da;font-size:11px;margin-bottom:14px;}
+.cert-table th{background:#f1f5f9;padding:6px 8px;text-align:center;font-weight:700;color:#475569;border:1px solid #c8d0da;font-size:10px;text-transform:uppercase;}
+.cert-table td{padding:6px 8px;border:1px solid #dde3ea;color:#334155;text-align:center;}
+.cert-pur{border:1px solid #c8d0da;border-radius:5px;padding:8px 12px;margin-bottom:12px;}
+.cert-pur-l{font-size:10px;color:#64748b;font-weight:700;margin-bottom:3px;}
+.cert-pur-v{font-size:12px;color:#1e293b;}
+.cert-decl{text-align:center;font-size:12px;color:#475569;padding:10px;background:#f8fafc;border-radius:5px;margin-bottom:14px;}
+.cert-sg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.cert-sb{border:1px solid #c8d0da;border-radius:5px;padding:8px 10px;text-align:center;}
+.cert-sl{font-size:10px;color:#64748b;font-weight:700;margin-bottom:20px;}
+.cert-sline{border-top:1px solid #c8d0da;margin-top:3px;}
+.cert-no{text-align:right;font-size:10px;color:#94a3b8;font-family:monospace;margin-bottom:6px;}
+
+/* MULTI-CERT CHECK */
+.cert-chk-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.cert-chk-row:last-child{border-bottom:none;}
+.cert-chk-row:hover{background:var(--accent-dim);}
+.cert-chk-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.cert-chk-info{flex:1;font-size:12px;}
+.cert-chk-name{font-weight:600;color:var(--text1);}
+.cert-chk-sub{font-size:10px;color:var(--text3);}
+
+/* ALERT / CONFIRM DIALOG */
+.alert-box{background:var(--bg3);border:1px solid var(--orange);border-radius:10px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;}
+.alert-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.alert-msg{font-size:13px;line-height:1.6;color:var(--text1);}
+.alert-msg strong{color:var(--orange);}
+
+/* EMPTY */
+.es{text-align:center;padding:44px 20px;color:var(--text3);}
+.es-icon{font-size:34px;margin-bottom:10px;opacity:.4;}
+
+/* TOAST */
+.tc{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:11px 15px;font-size:13px;color:var(--text1);box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;animation:sli .25s ease;min-width:240px;}
+.toast.suc{border-color:rgba(34,197,94,.4);}
+.toast.err{border-color:rgba(239,68,68,.4);}
+@keyframes sli{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+@media print{
+  body>*:not(.print-area){display:none!important;}
+  .print-area{display:block!important;padding:0;}
+  .loan-cert{border-radius:0;}
+  .cert-hd{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .cert-table th{background:#f1f5f9!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .cert-decl{background:#f8fafc!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .cert-page-break{page-break-before:always;}
+}
+@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr);}.fg{grid-template-columns:repeat(2,1fr);}.fg3{grid-column:span 2;}}
+@media(max-width:640px){.main{padding:12px;}.fg{grid-template-columns:1fr;}.fg2,.fg3{grid-column:span 1;}.cert-sg{grid-template-columns:1fr 1fr;}}
+
+/* ═══════════════════════════════════════
+   MOBILE RESPONSIVE STYLES
+═══════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* HEADER */
+  .header{
+    padding:0 12px;
+    height:auto;
+    flex-wrap:wrap;
+    gap:8px;
+    padding-top:8px;
+    padding-bottom:8px;
+  }
+  .header-logo{font-size:13px;}
+  .header-logo img{width:28px!important;height:28px!important;}
+  .hd{display:none;}
+  .company-input{width:130px;font-size:12px;}
+  .header-right{gap:5px;flex-wrap:wrap;}
+  .header-right .btn{font-size:10px;padding:3px 7px;}
+  .date-badge{font-size:10px;padding:2px 6px;}
+
+  /* TABS — scrollable horizontal */
+  .tabs{
+    padding:0 8px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    gap:2px;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{padding:10px 12px;font-size:12px;white-space:nowrap;}
+
+  /* MAIN */
+  .main{padding:10px;}
+
+  /* STAT GRID */
+  .stat-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+  .stat-value{font-size:22px;}
+  .stat-card{padding:12px 14px;}
+
+  /* SECTION HEADER */
+  .sh{padding:10px 12px;gap:7px;flex-wrap:wrap;}
+  .st{font-size:12px;}
+  .sh .btn{font-size:10px!important;padding:4px 8px!important;}
+  .sb{padding:12px;}
+
+  /* FORM — single column */
+  .fg{grid-template-columns:1fr!important;}
+  .fg2,.fg3{grid-column:span 1!important;}
+
+  /* FORM LAYOUT — 폼+사진 세로배치 */
+  .reg-layout{
+    grid-template-columns:1fr!important;
+  }
+
+  /* FILTER BAR */
+  .fbar{gap:6px;}
+  .fbar .fi,.fbar .fs{height:36px;font-size:12px;}
+  .sw{min-width:100%;flex:unset;}
+  .fbar-date-row{display:flex;align-items:center;gap:4px;width:100%;}
+  .fbar-date-row .fi{flex:1;min-width:0;}
+  .fbar .fbar-select{flex:1;width:auto!important;}
+  .fbar > .btn{width:100%;justify-content:center;}
+
+  /* TABLE — 카드형 변환 */
+  .tw{overflow-x:visible;}
+  .tw table thead{display:none;}
+  .tw table tbody tr{
+    display:block;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    margin-bottom:8px;
+    padding:10px 12px;
+    position:relative;
+  }
+  .tw table tbody tr:hover{background:var(--bg3);}
+  .tw table tbody tr.tr-returned{background:var(--green-dim);}
+  .tw table tbody tr.tr-overdue{border-left:3px solid var(--red);}
+  .tw table tbody tr.tr-perm{border-left:3px solid var(--purple);}
+  .tw table td{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:4px 0;
+    font-size:12px;
+    border-bottom:1px solid var(--border);
+    white-space:normal;
+    word-break:break-all;
+  }
+  .tw table td:last-child{border-bottom:none;}
+  .tw table td::before{
+    content:attr(data-label);
+    font-size:10px;
+    font-weight:600;
+    color:var(--text3);
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    min-width:72px;
+    flex-shrink:0;
+    margin-right:8px;
+  }
+  /* 액션 버튼 td는 전체 너비 */
+  .tw table td.td-action{
+    flex-direction:column;
+    align-items:stretch;
+    gap:6px;
+    padding-top:8px;
+  }
+  .tw table td.td-action::before{display:none;}
+  .tw table td.td-action > div{
+    display:flex;gap:6px;flex-wrap:wrap;
+  }
+  .tw table td.td-action .btn{flex:1;justify-content:center;font-size:11px;}
+
+  /* MODAL */
+  .mo{padding:8px;}
+  .md{border-radius:10px;max-height:95vh;}
+  .mb{padding:14px;}
+  .mh{padding:12px 14px;}
+  .mf{padding:10px 14px;gap:6px;flex-wrap:wrap;}
+  .mf .btn{flex:1;justify-content:center;font-size:12px;}
+
+  /* FORM ACTIONS */
+  .fa{flex-wrap:wrap;gap:6px;}
+  .fa .btn{flex:1;justify-content:center;font-size:12px;}
+
+  /* DB CARDS */
+  .db-cards{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .dc-img{height:100px;}
+  .dc-img img{height:100px;}
+  .dc-name{font-size:12px;}
+
+  /* DB CLIENT ROW */
+  .db-client-row{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;}
+  .db-client-row .client-del-btn{grid-column:span 2;width:100%;height:28px;border-radius:6px;}
+
+  /* PAGINATION */
+  .pgn{flex-wrap:wrap;gap:4px;}
+  .pb{min-width:28px;height:28px;font-size:11px;}
+  #pg-info{font-size:10px;}
+
+  /* CERT SIGNATURE GRID */
+  .cert-sg{grid-template-columns:1fr 1fr;}
+  .cert-ig{grid-template-columns:1fr;}
+  .cert-title{font-size:18px;letter-spacing:4px;}
+
+  /* TOAST */
+  .tc{bottom:16px;right:8px;left:8px;}
+  .toast{min-width:unset;width:100%;font-size:12px;}
+
+  /* DB DETAIL MODAL 버튼 */
+  #m-db-detail .mf{justify-content:stretch;}
+
+  /* DB SECTION HEADER 액션 그룹 */
+  .db-sh-actions{
+    width:100%;
+    margin-left:0!important;
+    justify-content:flex-start;
+  }
+  .db-sh-actions .btn{font-size:11px;padding:5px 9px;}
+  .db-search-wrap{flex:1;}
+  .db-search-wrap input{width:100%!important;}
+  #dbl-cat{flex:1;width:auto!important;}
+
+  /* 대출관리대장 탭 헤더 버튼 */
+  .led-sh-actions{
+    width:100%;
+    margin-left:0!important;
+    flex-wrap:wrap;
+  }
+  .led-sh-actions .btn{font-size:11px;flex:1;justify-content:center;}
+
+  /* 반납예정일 영구대출 체크박스 */
+  .cbrow{margin-top:2px;}
+
+  /* AUTOCOMPLETE DROPDOWN */
+  .ac-dropdown{max-height:180px;}
+
+  /* EXCEL 일괄등록 테이블 */
+  #m-xl .tw{overflow-x:auto;}
+  #m-xl table thead{display:table-header-group!important;}
+  #m-xl table tbody tr{display:table-row!important;background:unset!important;border:none!important;padding:0!important;}
+  #m-xl table td{display:table-cell!important;padding:6px 8px!important;border-bottom:1px solid var(--border)!important;white-space:nowrap!important;}
+  #m-xl table td::before{display:none!important;}
+
+  /* 대출증 테이블 모바일 */
+  .cert-table{font-size:10px;}
+  .cert-table th,.cert-table td{padding:4px 6px;}
+  .cert-ig{grid-template-columns:1fr 1fr;}
+  .cert-body{padding:12px 14px;}
+  .cert-hd{padding:12px 14px;}
+  .cert-title{font-size:16px;letter-spacing:3px;}
+
+  /* 공구 DB 검색 패널 */
+  #ds-panel{padding:10px;}
+  .db-results{max-height:220px;}
+  .dri{padding:8px 10px;gap:8px;}
+  .drt{width:36px;height:36px;}
+  .drt img{width:36px;height:36px;}
+
+  /* 엑셀 모달 */
+  #m-xl .md{max-width:100%!important;}
+
+  /* 복원 모달 */
+  #m-restore .md{max-width:100%!important;}
+
+  /* 백업/복원 요약 */
+  #restore-summary{font-size:12px;line-height:1.7;}
+
+  /* STORAGE STATUS */
+  #idb-status{display:none;}
+}
+
+/* 초소형 화면 (360px 이하) */
+@media(max-width:400px){
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .stat-value{font-size:18px;}
+  .db-cards{grid-template-columns:1fr 1fr;}
+  .header-logo span{display:none;}
+  .company-input{width:110px;}
+}
+
+/* Bottom Navigation Bar (모바일 전용) */
+.mobile-nav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:300;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  padding:6px 0 env(safe-area-inset-bottom,6px);
+  justify-content:space-around;
+  align-items:center;
+}
+.mobile-nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);font-size:10px;font-family:'Noto Sans KR',sans-serif;
+  padding:4px 12px;border-radius:8px;transition:color .2s;
+  position:relative;
+}
+.mobile-nav-btn.active{color:var(--accent2);}
+.mobile-nav-btn svg{width:20px;height:20px;}
+.mobile-nav-btn .mn-badge{
+  position:absolute;top:2px;right:8px;
+  min-width:16px;height:16px;
+  background:var(--accent);color:#fff;
+  border-radius:8px;font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 4px;
+}
+
+@media(max-width:768px){
+  /* 탭바 숨기고 바텀 네비로 대체 */
+  .tabs{display:none;}
+  .mobile-nav{display:flex;}
+  /* 하단 네비 높이만큼 여백 */
+  body{padding-bottom:64px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo" style="gap:8px;">
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABIAEgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6xFPUUxalQVuzBDlFOC15X8ZfHF3p3iTQvBWiTtBe6ldQLdTIfnSN5AAinsWGST6fWux+JPjnQ/A2g3Wr6vcrHFCdoAG5nkP3Y0X+Jz6dAOSQKfK9BKa18jpNtNK15P8As7eMvFfxDu/EHifWUNlo6vFa6ZYryExlndmx8z4KAngDoBXrrLSas7McWpK6K7CmMKnYVC9A2Rd6KU9aKZIL1qxGM4qqGCgsxwAMk1h+KNd1W00uWTw/oz6tdqQqxeekK5J5JZiOg5IH0zmi1wvY+ffEc93qH7VqSAp5em3Iu5HkPyRxxRgAn6NiuW1i41b4z/ElJYVmk0W0lNvpcB/jBPzSn/acjcT2XA6CvWvHugx33hq6u77+ydI8QanbbNRlsYi5AY5ePzS2W4yM46k4pvwWs9Hs/h7e32lyrLqNxPJplpHZT7ZYZM7ETf8Awux+dm7L6gHO90lc5eVt2+Z6p4Tj0LwT4etPDdnLFNPb8TLEy581uWLc/L+PYVc0Hxt4c1y9SwtL+NLyQO0MErKrzIpwXQZ+Zcg/hz05ryLw54V1ZPHkvhjxD8RHvdS+xrPeHTdiXVurI4UPK6F3DZbB4OMEjkV4ofEHiq0+IGp2Wga1eeRaTIm+WTdMkUKsFzIihtqoOmR15zWapqXU1dVwsraH3K4qCSvKfCHj/wARLpNlceI5NMiAgjlvFkdllijfIV9uAQQdoYH1zXZaD4z0fWpWgimVJluDbFdwIMm3cAD7g5HrUuDRoqkWbzdaKaxopDM7XtOh1rRLzSrhmSO6iMZdeqHsw6cg4PXtXkWvaP8AFzSrO6nQ6Df2trGzjyLp43dFBPCMvBwOmfxr2RX5pZFWVCjDKkYI9RVp2IlG58haRrfibx9NMskd1p+nQsiTzFf3ru/3Yol7u3vwOtd9Ppug/CzUfDevO2k6cNOvle7sLaPzJfKdWjkkkmJ3SOocscDHBwTXM+Itcm8BeOLrSLyLZLbXU95a/LxMGiAhcevcexBFdNBrzar4VuY7CLTILQJ5dxcakh8y8lKgvxtJxz1PA6DpWrVznX4mT+0Za+IfBXxQm8f+GJg1v4otY4kvElwIpkjUbN2cYdFV1PfDCuP8L+G/GOlfD8+NtbGmJpGrXgK2FzfPDLqEsjCOIYVTlDyR8wyqliQOvovwF1BfGvg/XPh14r0Y6loWmSItvK7ZRV3blg3A5yhG5SP4Dg44zhfF7xNrr/HnTbTUIINI0Dw/Gr6esqBo5EcBGuo1+6zDO1V/h2845qVde6U0n751thpOljxTpwl13TdV1a4uDdX88sBEPkxJ/q0+b94isAQG6nk4qn4y1pHvLPWZtV/tLUY7rzNPsrS3wrqQVj8wg5Vyckc4GB15xga94q0m9vBYvd31vp0xLrezrGLlIvLysVuNowrn+IDHzd+KyviZrDabpK6VZXGl6NBLKGnsNPQvJEi4AkZlOGbAGc9PWrS1JbVtD6E+EHi2Txf4ItdQu4zDqEDva3sTH5llQ4yfqMH8aK8+/ZTluv8AhA7i6uJFdbvUZZEOMMcYVifqR+QorGSs9DeErxVz2RX5qn4iudah0WaTw/b2NxqOQI0vJWjjx3JKgnIHQY5p4fmnh6BnjetQfGHUbrz2h0COVQVVxcNlR1wD5eQKxG8B/EDURO3iLT9I1h34hEurTRJGO/yqmWP1P4V9Agp6CsPx/o1tr/hDULCV3hkERnt5o/vwyxgsjr7gj8iatSM3DqeLReBfi3afD0+DtIl0DS42umla7tbyRJ/LLbthOzO7OPn6lQBXYXfgvWvGHgqDS/HgtYtcs23W2qafJl43A4lGQNpP8Sfdb24xyum6p4ws/CHhzxPpVvrGo6nr88mp6tJawljMVZVjtsBTsG0MRuwuN3faKq+LNTu5viZrGoanb3P/AAiYm0mXXIIg6sqvD8mQQGMSufnGAemcVXLdmfOktjHh+DGs6fp5h1Lw9o/iC93Mft9xqs65Gfl2RhQEGMcZJ96r2/w68Y3FlBod/DY2Wnid5J5rZy9xIrHJUuy56YHJwABxX1KDC8amPYYyo2lPu4xxj2xULwxE52j8qlTsW6SZznw/0S30DQ7bTbSLyoIFwqkkn1JJPUkkkmiujUBegxRUt3NErKxGHpweiigBwkpfMoooAPM96Qyc0UUAJvppeiikA3dRRRQM/9k=" alt="Y&K Logo" style="width:36px;height:36px;border-radius:6px;object-fit:cover;">
+    LOAN MGR
+  </div>
+  <div class="hd"></div>
+  <input class="company-input" id="companyInput" placeholder="회사명 입력">
+  <div class="header-right">
+    <button class="btn bo btn-sm" onclick="exportJSON()" title="전체 데이터를 JSON 파일로 백업" style="font-size:11px;padding:4px 10px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      백업
+    </button>
+    <label class="btn bo btn-sm" style="cursor:pointer;font-size:11px;padding:4px 10px;" title="JSON 백업 파일을 불러와 복원">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      복원
+      <input type="file" id="json-import-file" accept=".json" style="display:none;" onchange="importJSON(event)">
+    </label>
+    <div class="date-badge" id="idb-status" title="저장소 사용량" style="cursor:default;">💾 —</div>
+    <div class="date-badge" id="todayBadge"></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('t-reg')">✏️ 대출품 등록</button>
+  <button class="tab-btn" onclick="switchTab('t-led')">📋 대출관리대장 <span class="tbadge" id="bdg-led">0</span></button>
+  <button class="tab-btn" onclick="switchTab('t-db')">🗄️ 공구 DB <span class="tbadge" id="bdg-db">0</span></button>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-btn active" id="mn-reg" onclick="switchTab('t-reg')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    대출등록
+  </button>
+  <button class="mobile-nav-btn" id="mn-led" onclick="switchTab('t-led')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    관리대장
+    <span class="mn-badge" id="mn-bdg-led" style="display:none;">0</span>
+  </button>
+  <button class="mobile-nav-btn" id="mn-db" onclick="switchTab('t-db')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    공구DB
+    <span class="mn-badge" id="mn-bdg-db" style="display:none;">0</span>
+  </button>
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════════════════════
+     TAB 1 : 대출품 등록
+══════════════════════════════════ -->
+<div class="tab-panel active" id="t-reg">
+
+  <!-- DB 검색 패널 -->
+  <div class="sc" style="margin-bottom:14px;">
+    <div class="sh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="st">공구 DB 검색 &amp; 불러오기</div>
+      <span style="font-size:11px;color:var(--text3);margin-left:6px;">관리번호·품명·분류·특이사항으로 검색</span>
+      <button class="btn bo btn-sm" style="margin-left:auto;" onclick="toggleDbSearch()"><span id="ds-toggle">▼ 열기</span></button>
+    </div>
+    <div id="ds-panel" style="display:none;padding:14px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="position:relative;flex:1;">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="fi" id="ds-q" placeholder="관리번호, 품명, 분류, 특이사항..." style="padding-left:30px;" oninput="renderDbSearch()">
+        </div>
+        <button class="btn bo btn-sm" onclick="document.getElementById('ds-q').value='';renderDbSearch()">초기화</button>
+      </div>
+      <div id="ds-results" class="db-results"></div>
+    </div>
+  </div>
+
+  <!-- 폼 + 사진 미리보기 -->
+  <div class="reg-layout" style="display:grid;grid-template-columns:1fr 176px;gap:14px;align-items:start;">
+    <div class="sc">
+      <div class="sh">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <div class="st">대출품 등록</div>
+        <span id="reg-db-badge" style="display:none;margin-left:8px;" class="badge bc1">DB 불러옴</span>
+      </div>
+      <div class="sb">
+        <div class="fg">
+          <!-- 관리번호 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">관리번호 <span class="req">*</span></div>
+            <div style="display:flex;gap:6px;">
+              <input class="fi" id="f-id" placeholder="자동생성" style="flex:1;">
+              <button class="btn bo btn-sm" onclick="genId()">자동</button>
+            </div>
+          </div>
+          <!-- 대출일 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">대출일 <span class="req">*</span></div>
+            <input type="date" class="fi" id="f-loanDate">
+          </div>
+          <!-- 반납예정일 + 영구대출 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">반납예정일</div>
+            <input type="date" class="fi" id="f-due">
+            <div class="cbrow"><input type="checkbox" id="f-perm" onchange="togglePerm()"><label for="f-perm">♾ 영구대출</label></div>
+          </div>
+          <!-- 품명 -->
+          <div style="display:flex;flex-direction:column;gap:5px;" class="fg2">
+            <div class="fl">대출품명 <span class="req">*</span></div>
+            <input class="fi" id="f-name" placeholder="예: 사출금형 A형 (250T)">
+          </div>
+          <!-- 카테고리 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">카테고리 <span class="req">*</span></div>
+            <select class="fs" id="f-cat" onchange="updateSubCat('f-cat','f-sub')">
+              <option value="">선택하세요</option>
+              <option>금형류</option><option>치구류</option><option>공구류</option><option>기타</option>
+            </select>
+          </div>
+          <!-- 세부분류 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">세부분류</div>
+            <select class="fs" id="f-sub"><option value="">카테고리 먼저 선택</option></select>
+          </div>
+          <!-- 규격 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">규격/모델명</div>
+            <input class="fi" id="f-spec" placeholder="예: 250T, Ø50">
+          </div>
+          <!-- 수량 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">수량 <span class="req">*</span></div>
+            <input type="number" class="fi" id="f-qty" value="1" min="1" oninput="checkQtyLimit()">
+            <div id="f-qty-hint" style="font-size:10px;color:var(--text3);display:none;"></div>
+          </div>
+          <!-- 단위 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">단위</div>
+            <select class="fs" id="f-unit">
+              <option>EA</option><option>SET</option><option>식</option><option>개</option><option>본</option>
+            </select>
+          </div>
+          <!-- 대출처 (자동완성) -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">대출처 (거래처명) <span class="req">*</span></div>
+            <div class="ac-wrap">
+              <input class="fi" id="f-borrower" placeholder="업체명 입력 또는 선택" autocomplete="off"
+                oninput="acBorrowerFilter()"
+                onfocus="acBorrowerFilter()"
+                onkeydown="acKey(event,'ac-borrower')">
+              <div class="ac-dropdown" id="ac-borrower"></div>
+            </div>
+          </div>
+          <!-- 담당자 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">담당자 <span id="f-contact-auto" style="font-size:10px;color:var(--green);display:none;">✓ 자동입력</span></div>
+            <input class="fi" id="f-contact" placeholder="홍길동">
+          </div>
+          <!-- 연락처 -->
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="fl">연락처 <span id="f-phone-auto" style="font-size:10px;color:var(--green);display:none;">✓ 자동입력</span></div>
+            <input class="fi" id="f-phone" placeholder="010-0000-0000">
+          </div>
+          <!-- 대출목적 -->
+          <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+            <div class="fl">대출목적</div>
+            <input class="fi" id="f-purpose" placeholder="예: 시작품 제작, 품질검사용">
+          </div>
+          <!-- 비고 -->
+          <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+            <div class="fl">비고</div>
+            <textarea class="fta" id="f-remark" placeholder="특이사항, 주의사항 등"></textarea>
+          </div>
+        </div>
+        <div class="fa">
+          <button class="btn bo" onclick="resetRegForm()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>초기화
+          </button>
+          <button class="btn bo" onclick="saveAndPrint()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>저장+대출증출력
+          </button>
+          <button class="btn bp" onclick="saveRecord()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 사진 미리보기 -->
+    <div class="sc">
+      <div class="sh" style="padding:9px 13px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <div class="st" style="font-size:11px;">DB 품목 사진</div>
+      </div>
+      <div style="padding:11px;">
+        <div class="photo-prev" id="reg-photo-prev">
+          <div class="noph">DB에서 품목을<br>불러오면 표시됩니다</div>
+        </div>
+        <div style="margin-top:7px;font-size:10px;color:var(--text3);text-align:center;" id="reg-photo-name">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     TAB 2 : 대출관리대장
+══════════════════════════════════ -->
+<div class="tab-panel" id="t-led">
+  <div class="stat-grid">
+    <div class="stat-card sc-total"><div class="stat-label">전체 건수</div><div class="stat-value" id="st-total">0</div><div class="stat-sub">누적 대출</div></div>
+    <div class="stat-card sc-active"><div class="stat-label">대출중</div><div class="stat-value" id="st-active">0</div><div class="stat-sub">미반납</div></div>
+    <div class="stat-card sc-done"><div class="stat-label">반납완료</div><div class="stat-value" id="st-done">0</div><div class="stat-sub">반납 건</div></div>
+    <div class="stat-card sc-over"><div class="stat-label">반납지연</div><div class="stat-value" id="st-over">0</div><div class="stat-sub">기한 초과</div></div>
+  </div>
+  <div class="sc">
+    <div class="sh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <div class="st">대출관리대장</div>
+      <div class="led-sh-actions" style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn bo btn-sm" onclick="openMultiCertModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>다중 대출증 출력
+        </button>
+        <button class="btn bo btn-sm" onclick="exportCSV()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV
+        </button>
+      </div>
+    </div>
+    <div class="sb">
+      <div class="fbar">
+        <div class="sw">
+          <svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="fi" id="l-q" placeholder="품명, 대출처, 관리번호..." oninput="renderLed()">
+        </div>
+        <select class="fs" id="l-cat" onchange="renderLed()" style="width:115px">
+          <option value="">전체 분류</option><option>금형류</option><option>치구류</option><option>공구류</option><option>기타</option>
+        </select>
+        <select class="fs" id="l-status" onchange="renderLed()" style="width:115px">
+          <option value="">전체 상태</option><option value="active">대출중</option><option value="returned">반납완료</option>
+          <option value="overdue">반납지연</option><option value="perm">영구대출</option>
+        </select>
+        <div class="fbar-date-row">
+          <input type="date" class="fi" id="l-df" onchange="renderLed()">
+          <span style="color:var(--text3);font-size:12px;flex-shrink:0;">~</span>
+          <input type="date" class="fi" id="l-dt" onchange="renderLed()">
+        </div>
+        <button class="btn bo btn-sm" onclick="clearLedFilter()">초기화</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th onclick="sortBy('id')" class="sorted">관리번호 <span class="sico">↕</span></th>
+            <th onclick="sortBy('itemName')">품명 <span class="sico">↕</span></th>
+            <th onclick="sortBy('category')">분류 <span class="sico">↕</span></th>
+            <th>규격</th>
+            <th style="text-align:center">수량</th>
+            <th onclick="sortBy('borrower')">대출처 <span class="sico">↕</span></th>
+            <th onclick="sortBy('loanDate')">대출일 <span class="sico">↕</span></th>
+            <th onclick="sortBy('returnDueDate')">반납예정 <span class="sico">↕</span></th>
+            <th style="text-align:center">D-Day</th>
+            <th style="text-align:center">반납여부</th>
+            <th onclick="sortBy('returnDate')">반납일 <span class="sico">↕</span></th>
+            <th style="text-align:center;min-width:190px">액션</th>
+          </tr></thead>
+          <tbody id="led-body"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;color:var(--text3)" id="pg-info"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select class="pss" id="pg-size" onchange="changePgSize()">
+            <option value="10">10건</option><option value="20">20건</option><option value="50">50건</option>
+          </select>
+          <div class="pgn" id="pgn"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     TAB 3 : 공구 DB
+══════════════════════════════════ -->
+<div class="tab-panel" id="t-db">
+  <!-- 등록/수정 폼 -->
+  <div class="sc" style="margin-bottom:14px;">
+    <div class="sh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      <div class="st">신규 등록 / 수정</div>
+      <button class="btn bo btn-sm" style="margin-left:auto;" onclick="toggleDbForm()"><span id="dbf-toggle">▼ 폼 열기</span></button>
+    </div>
+    <div id="dbf-panel" style="display:none;padding:18px;">
+      <input type="hidden" id="dbe-id">
+      <div class="fg">
+        <!-- DB 관리번호 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">DB 관리번호 <span class="req">*</span></div>
+          <div style="display:flex;gap:6px;">
+            <input class="fi" id="db-id" placeholder="자동생성" style="flex:1;">
+            <button class="btn bo btn-sm" onclick="genDbId()">자동</button>
+          </div>
+        </div>
+        <!-- 품명 -->
+        <div style="display:flex;flex-direction:column;gap:5px;" class="fg2">
+          <div class="fl">품명 <span class="req">*</span></div>
+          <input class="fi" id="db-name" placeholder="공구/금형/치구명">
+        </div>
+        <!-- 카테고리 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">카테고리 <span class="req">*</span></div>
+          <select class="fs" id="db-cat" onchange="updateSubCat('db-cat','db-sub')">
+            <option value="">선택</option><option>금형류</option><option>치구류</option><option>공구류</option><option>기타</option>
+          </select>
+        </div>
+        <!-- 세부분류 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">세부분류</div>
+          <select class="fs" id="db-sub"><option value="">카테고리 먼저 선택</option></select>
+        </div>
+        <!-- 규격 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">규격/모델명</div>
+          <input class="fi" id="db-spec" placeholder="예: 250T, Ø50">
+        </div>
+        <!-- 제조사 (자동완성) -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">제조사</div>
+          <div class="ac-wrap">
+            <input class="fi" id="db-maker" placeholder="제조사명 입력 또는 선택" autocomplete="off"
+              oninput="acFilter('db-maker','ac-maker','makers')"
+              onfocus="acFilter('db-maker','ac-maker','makers')"
+              onkeydown="acKey(event,'ac-maker')">
+            <div class="ac-dropdown" id="ac-maker"></div>
+          </div>
+        </div>
+        <!-- 구입일 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">구입일</div>
+          <input type="date" class="fi" id="db-pdate">
+        </div>
+        <!-- 구입가격 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">구입가격</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" class="fi" id="db-price" placeholder="0" style="flex:1;text-align:right;" oninput="formatPriceInput(this)" onblur="formatPriceInput(this)">
+            <select class="fs" id="db-price-unit" style="width:60px;">
+              <option>원</option><option>달러</option><option>엔</option>
+            </select>
+          </div>
+        </div>
+        <!-- 보관위치 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">보관위치</div>
+          <input class="fi" id="db-loc" placeholder="예: A동 2층 선반-3">
+        </div>
+        <!-- 총 수량 -->
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="fl">총 보유 수량 <span class="req">*</span></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="number" class="fi" id="db-total-qty" value="1" min="1" style="flex:1;">
+            <select class="fs" id="db-qty-unit" style="width:72px;">
+              <option>EA</option><option>SET</option><option>식</option><option>개</option><option>본</option>
+            </select>
+          </div>
+        </div>
+        <!-- 대출처 목록 (여러 업체 등록 가능) -->
+        <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+          <div class="fl">대출처 목록 <span style="font-size:10px;color:var(--text3);text-transform:none;font-weight:400;">(업체명·담당자·연락처 등록 — 대출 시 자동완성 사용)</span></div>
+          <div id="db-clients-wrap" style="display:flex;flex-direction:column;gap:6px;">
+            <!-- 동적으로 행 추가됨 -->
+          </div>
+          <button type="button" class="btn bo btn-sm" style="align-self:flex-start;margin-top:4px;" onclick="addDbClientRow()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>대출처 행 추가
+          </button>
+        </div>
+        <!-- 가공품 도번 목록 -->
+        <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+          <div class="fl">가공품 도번 목록
+            <span style="font-size:10px;color:var(--text3);text-transform:none;font-weight:400;">
+              (쉼표 또는 줄바꿈으로 구분 — 예: 196621, 196630, P-2241)
+            </span>
+          </div>
+          <textarea class="fta" id="db-partno"
+            placeholder="196621, 196630&#10;P-2241&#10;공용품 도번을 자유롭게 입력..."
+            style="min-height:72px;font-family:'IBM Plex Mono',monospace;font-size:12px;"
+            oninput="renderPartnoTags()"></textarea>
+          <div id="db-partno-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:0;"></div>
+        </div>
+        <!-- 특이사항 -->
+        <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+          <div class="fl">특이사항 / 메모</div>
+          <textarea class="fta" id="db-remark" placeholder="사용 주의사항, 특이사항 등"></textarea>
+        </div>
+        <!-- 사진 -->
+        <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+          <div class="fl">사진 등록</div>
+          <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+            <div id="db-photo-up-wrap">
+              <div class="pup" onclick="document.getElementById('db-photo-file').click()">
+                <input type="file" id="db-photo-file" accept="image/*" onchange="handlePhoto(event)" style="display:none">
+                <div class="pup-icon">📷</div>
+                <div class="pup-text">클릭하여 사진 선택<br>(JPG, PNG, GIF)</div>
+              </div>
+            </div>
+            <div id="db-photo-thumb-wrap" style="display:none;">
+              <div class="pthw">
+                <img id="db-photo-thumb" class="pth" src="" alt="">
+                <button class="pthr" onclick="removePhoto()" title="삭제">✕</button>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="db-photo">
+        </div>
+      </div>
+      <div class="fa">
+        <button class="btn bo" onclick="resetDbForm()">초기화</button>
+        <button class="btn bp" onclick="saveDbItem()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+          <span id="db-save-txt">DB에 저장</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DB 목록 -->
+  <div class="sc">
+    <div class="sh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      <div class="st">등록된 공구 목록</div>
+      <span class="tbadge" id="db-cnt">0</span>
+      <div class="db-sh-actions" style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn bo btn-sm" onclick="exportDbXlsx()" title="공구 DB 전체를 엑셀로 다운로드">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          엑셀 다운로드
+        </button>
+        <label class="btn bo btn-sm" style="cursor:pointer;" title="엑셀 파일을 업로드하여 DB에 일괄 등록">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          엑셀 일괄 등록
+          <input type="file" id="xl-upload" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleXlUpload(event)">
+        </label>
+        <div class="db-search-wrap" style="position:relative;">
+          <svg style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text3);width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="fi" id="dbl-q" placeholder="검색..." style="padding-left:26px;height:31px;font-size:11px;width:180px;" oninput="renderDbList()">
+        </div>
+        <select class="fs" id="dbl-cat" onchange="renderDbList()" style="height:31px;font-size:11px;width:105px;">
+          <option value="">전체 분류</option><option>금형류</option><option>치구류</option><option>공구류</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="sb">
+      <div class="db-cards" id="db-card-grid"></div>
+      <div class="es" id="db-empty" style="display:none;"><div class="es-icon">🗄️</div><div>등록된 공구가 없습니다.</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══════ MODALS ══════ -->
+
+<!-- 대출증 단일 미리보기 -->
+<div class="mo" id="m-cert">
+  <div class="md">
+    <div class="mh"><div class="mt">대출증 미리보기</div><button class="mc" onclick="closeM('m-cert')">✕</button></div>
+    <div class="mb"><div class="loan-cert" id="cert-content"></div></div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-cert')">닫기</button>
+      <button class="btn bp" onclick="printCert()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>인쇄 / PDF저장
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 다중 대출증 출력 모달 -->
+<div class="mo" id="m-multi-cert">
+  <div class="md" style="max-width:620px;">
+    <div class="mh"><div class="mt">다중 대출증 출력</div><button class="mc" onclick="closeM('m-multi-cert')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">대출처가 같은 항목을 선택하면 한 양식에 여러 품목이 출력됩니다.</p>
+      <!-- 대출처 필터 -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+        <select class="fs" id="mc-borrower-filter" style="flex:1;" onchange="renderMultiCertList()">
+          <option value="">— 대출처 선택 (필터) —</option>
+        </select>
+        <button class="btn bo btn-sm" onclick="mcSelectAll(true)">전체 선택</button>
+        <button class="btn bo btn-sm" onclick="mcSelectAll(false)">전체 해제</button>
+      </div>
+      <div id="mc-list" style="border:1px solid var(--border);border-radius:8px;max-height:340px;overflow-y:auto;"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text3);" id="mc-selected-info">선택된 항목: 0건</div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-multi-cert')">닫기</button>
+      <button class="btn bp" onclick="printMultiCert()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>선택 항목 인쇄
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 반납처리 -->
+<div class="mo" id="m-return">
+  <div class="md" style="max-width:400px;">
+    <div class="mh"><div class="mt">반납 처리</div><button class="mc" onclick="closeM('m-return')">✕</button></div>
+    <div class="mb">
+      <div id="ret-info" style="background:var(--bg3);border-radius:8px;padding:11px;margin-bottom:14px;font-size:13px;"></div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div class="fl">반납일</div>
+        <input type="date" class="fi" id="ret-date">
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-return')">취소</button>
+      <button class="btn bs" onclick="confirmReturn()">✓ 반납 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 반납취소 확인 -->
+<div class="mo" id="m-unreturn">
+  <div class="md" style="max-width:380px;">
+    <div class="mh"><div class="mt">반납 취소</div><button class="mc" onclick="closeM('m-unreturn')">✕</button></div>
+    <div class="mb">
+      <div class="alert-box">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-msg">반납 처리를 <strong>취소</strong>하고 <strong>대출중</strong> 상태로 되돌립니다. 계속하시겠습니까?</div>
+      </div>
+      <div id="unret-info" style="background:var(--bg3);border-radius:8px;padding:11px;font-size:13px;"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-unreturn')">취소</button>
+      <button class="btn bw" onclick="confirmUnreturn()">반납취소 (대출중으로)</button>
+    </div>
+  </div>
+</div>
+
+<!-- 삭제 확인 -->
+<div class="mo" id="m-del">
+  <div class="md" style="max-width:360px;">
+    <div class="mh"><div class="mt">삭제 확인</div><button class="mc" onclick="closeM('m-del')">✕</button></div>
+    <div class="mb">
+      <p style="color:var(--text2);font-size:13px;">이 항목을 삭제하시겠습니까? 되돌릴 수 없습니다.</p>
+      <div id="del-info" style="background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 13px;margin-top:11px;font-size:13px;color:var(--red);"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-del')">취소</button>
+      <button class="btn bd" onclick="confirmDelete()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 이미 대출중 경고 -->
+<div class="mo" id="m-inuse">
+  <div class="md" style="max-width:420px;">
+    <div class="mh"><div class="mt">⚠️ 대출 불가</div><button class="mc" onclick="closeM('m-inuse')">✕</button></div>
+    <div class="mb">
+      <div class="alert-box" style="border-color:var(--red);">
+        <div class="alert-icon">🔴</div>
+        <div class="alert-msg" id="inuse-msg"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bo" onclick="closeM('m-inuse')">확인</button></div>
+  </div>
+</div>
+
+<!-- DB 상세 -->
+<div class="mo" id="m-db-detail">
+  <div class="md" style="max-width:560px;">
+    <div class="mh"><div class="mt" id="dbd-title">공구 상세</div><button class="mc" onclick="closeM('m-db-detail')">✕</button></div>
+    <div class="mb" id="dbd-body"></div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-db-detail')">닫기</button>
+      <button class="btn bd btn-sm" id="dbd-del-btn">🗑 삭제</button>
+      <button class="btn bo" id="dbd-edit-btn">✏️ 수정</button>
+      <button class="btn bo" id="dbd-clone-btn" style="color:var(--teal);border-color:rgba(20,184,166,.3);">📋 복제 신규등록</button>
+      <button class="btn bp" id="dbd-load-btn">← 등록폼에 불러오기</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════ 엑셀 일괄 등록 모달 ══════ -->
+<div class="mo" id="m-xl">
+  <div class="md" style="max-width:780px;">
+    <div class="mh">
+      <div class="mt">📊 엑셀 일괄 등록</div>
+      <button class="mc" onclick="closeXlModal()">✕</button>
+    </div>
+    <div class="mb">
+
+      <!-- STEP 1: 파일 정보 + 컬럼 매핑 -->
+      <div id="xl-step1">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--text2);">
+          <strong style="color:var(--text1);">📋 엑셀 양식 안내</strong><br>
+          아래 필드명(한글/영문 모두 인식)으로 컬럼을 매핑하세요. 필수는 <span style="color:var(--red)">*</span> 표시.
+        </div>
+        <!-- 파일 정보 -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--accent-dim);border:1px solid rgba(59,130,246,.3);border-radius:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--accent2);" id="xl-filename">—</div>
+            <div style="font-size:11px;color:var(--text3);" id="xl-fileinfo">—</div>
+          </div>
+        </div>
+        <!-- 컬럼 매핑 테이블 -->
+        <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">컬럼 매핑 설정</div>
+        <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:var(--bg3);">
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text3);width:28%;border-bottom:1px solid var(--border);">DB 필드</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text3);border-bottom:1px solid var(--border);">엑셀 컬럼 선택</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text3);width:30%;border-bottom:1px solid var(--border);">샘플 데이터 (1행)</th>
+              </tr>
+            </thead>
+            <tbody id="xl-map-tbody"></tbody>
+          </table>
+        </div>
+        <!-- 미리보기 -->
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">
+            데이터 미리보기 <span id="xl-preview-count" style="color:var(--accent2);font-weight:700;"></span>
+          </div>
+          <div style="overflow-x:auto;max-height:200px;border:1px solid var(--border);border-radius:8px;">
+            <table id="xl-preview-table" style="width:100%;border-collapse:collapse;font-size:11px;"></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: 등록 결과 -->
+      <div id="xl-step2" style="display:none;">
+        <div id="xl-result-summary" style="margin-bottom:12px;"></div>
+        <div id="xl-result-list" style="border:1px solid var(--border);border-radius:8px;max-height:320px;overflow-y:auto;font-size:12px;"></div>
+      </div>
+
+    </div>
+    <div class="mf" id="xl-footer">
+      <button class="btn bo" onclick="closeXlModal()">취소</button>
+      <button class="btn bp" id="xl-import-btn" onclick="runXlImport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="xl-import-btn-txt">DB에 일괄 등록</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════ JSON 복원 확인 모달 ══════ -->
+<div class="mo" id="m-restore">
+  <div class="md" style="max-width:480px;">
+    <div class="mh"><div class="mt">📂 데이터 복원 확인</div><button class="mc" onclick="closeM('m-restore')">✕</button></div>
+    <div class="mb">
+      <div style="background:var(--orange-dim);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:14px 16px;margin-bottom:14px;display:flex;gap:12px;">
+        <span style="font-size:20px;flex-shrink:0;">⚠️</span>
+        <div style="font-size:13px;color:var(--text1);line-height:1.7;">
+          현재 저장된 모든 데이터가 <strong style="color:var(--orange);">백업 파일의 데이터로 교체</strong>됩니다.<br>
+          이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?
+        </div>
+      </div>
+      <div id="restore-summary" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:12px;line-height:1.8;"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-restore');clearRestoreData()">취소</button>
+      <button class="btn bp" onclick="confirmRestore()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        복원 실행
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="print-area" id="print-area" style="display:none;"></div>
+<div class="tc" id="tc"></div>
+</body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════════════════
+const SK = { L:'loan_v3', DB:'tooldb_v3', CO:'loan_co' };
+
+// ═══════════════════════════════════════════════════
+//  IndexedDB 레이어  (localStorage 폴백 포함)
+// ═══════════════════════════════════════════════════
+const IDB_NAME = 'LoanMgrDB';
+const IDB_VER  = 1;
+let   _idb     = null;   // IDBDatabase 인스턴스
+
+function openIDB() {
+  return new Promise((res, rej) => {
+    if (_idb) { res(_idb); return; }
+    const req = indexedDB.open(IDB_NAME, IDB_VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('loans'))  db.createObjectStore('loans',  { keyPath:'id' });
+      if (!db.objectStoreNames.contains('tooldb')) db.createObjectStore('tooldb', { keyPath:'id' });
+      if (!db.objectStoreNames.contains('config')) db.createObjectStore('config');
+    };
+    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+async function idbGetAll(store) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const tx  = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => res(req.result || []);
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+async function idbPutAll(store, items) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    const os = tx.objectStore(store);
+    os.clear();
+    items.forEach(item => os.put(item));
+    tx.oncomplete = () => res();
+    tx.onerror    = e => rej(e.target.error);
+  });
+}
+
+async function idbGetConfig(key) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction('config','readonly').objectStore('config').get(key);
+    req.onsuccess = () => res(req.result ?? null);
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+async function idbPutConfig(key, val) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction('config','readwrite').objectStore('config').put(val, key);
+    req.onsuccess = () => res();
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+// 저장 래퍼 — IDB 우선, 실패 시 localStorage 폴백
+async function saveLoans()  {
+  try { await idbPutAll('loans',  loans);  } catch(e) { console.warn('IDB loans save failed, fallback:', e); localStorage.setItem(SK.L, JSON.stringify(loans)); }
+}
+async function saveToolDb() {
+  try { await idbPutAll('tooldb', toolDb); } catch(e) { console.warn('IDB tooldb save failed, fallback:', e); localStorage.setItem(SK.DB, JSON.stringify(toolDb)); }
+}
+async function saveCo(val) {
+  try { await idbPutConfig(SK.CO, val);    } catch(e) { localStorage.setItem(SK.CO, val); }
+}
+
+// ── 사진 압축 (Canvas 리사이즈) ──
+// maxW/maxH: 최대 픽셀, quality: JPEG 품질 0~1
+function compressImage(file, maxW, maxH, quality) {
+  return new Promise((res) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        res(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+const SUB = {
+  '금형류':['사출금형','프레스금형','다이캐스팅금형','단조금형','블로우금형','기타금형'],
+  '치구류':['용접치구','검사치구','조립치구','가공치구','측정치구','기타치구'],
+  '공구류':['절삭공구','측정공구','수공구','전동공구','특수공구','기타공구'],
+  '기타':['게이지류','마스터샘플','시험장비','기타설비']
+};
+const CB = {'금형류':'bc1','치구류':'bc2','공구류':'bc3','기타':'bc4'};
+
+let loans=[], toolDb=[];
+let sortF='id', sortD=1, pg=1, pgSz=10;
+let pendRet=null, pendUnret=null, pendDel=null, delTgt='loan';
+let curCert=null, dbFormOpen=false, dsOpen=false, curDbDetail=null;
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+async function init() {
+  // IDB 로드 (실패 시 localStorage 폴백)
+  try {
+    const [l, d] = await Promise.all([idbGetAll('loans'), idbGetAll('tooldb')]);
+    loans  = l.length ? l  : JSON.parse(localStorage.getItem(SK.L) ||'[]');
+    toolDb = d.length ? d  : JSON.parse(localStorage.getItem(SK.DB)||'[]');
+    const co = await idbGetConfig(SK.CO);
+    document.getElementById('companyInput').value = co ?? localStorage.getItem(SK.CO) ?? '';
+  } catch(e) {
+    console.warn('IDB load failed, using localStorage:', e);
+    loans  = JSON.parse(localStorage.getItem(SK.L) ||'[]');
+    toolDb = JSON.parse(localStorage.getItem(SK.DB)||'[]');
+    document.getElementById('companyInput').value = localStorage.getItem(SK.CO)||'';
+  }
+  // localStorage → IDB 마이그레이션 (최초 1회)
+  const lsLoans  = localStorage.getItem(SK.L);
+  const lsToolDb = localStorage.getItem(SK.DB);
+  if (lsLoans || lsToolDb) {
+    if (lsLoans)  { if(!loans.length)  loans  = JSON.parse(lsLoans);  await saveLoans(); updateStorageStatus();  localStorage.removeItem(SK.L); }
+    if (lsToolDb) { if(!toolDb.length) toolDb = JSON.parse(lsToolDb); await saveToolDb(); updateStorageStatus(); localStorage.removeItem(SK.DB); }
+    toast('✓ 기존 데이터를 IndexedDB로 자동 이전했습니다.', 'suc');
+  }
+  document.getElementById('todayBadge').textContent = fmt(new Date());
+  const t=new Date();
+  setV('f-loanDate', iso(t));
+  const d=new Date(t); d.setMonth(d.getMonth()+1);
+  setV('f-due', iso(d));
+  genId(); updSubCat();
+  await loadClientMaster();
+  updateBadges(); renderLed(); renderDbList(); renderDbSearch();
+  addDbClientRow();
+  document.addEventListener('click', e=>{
+    document.querySelectorAll('.ac-dropdown.open').forEach(el=>{
+      if(!el.parentElement.contains(e.target)) el.classList.remove('open');
+    });
+  });
+  updateStorageStatus();
+}
+const save   = () => saveLoans(); updateStorageStatus();
+const saveDb = () => saveToolDb(); updateStorageStatus();
+document.getElementById('companyInput').addEventListener('input', function(){
+  saveCo(this.value);
+});
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+const iso = d=>d.toISOString().slice(0,10);
+const fmt = d=>{if(!d)return'-';if(typeof d==='string')d=new Date(d);return d.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/ /g,'');};
+const setV = (id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+const getV = id=>(document.getElementById(id)||{}).value||'';
+
+function genId() {
+  const n=new Date(), pfx=`LN-${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;
+  setV('f-id', `${pfx}-${String(loans.filter(r=>r.id.startsWith(pfx)).length+1).padStart(3,'0')}`);
+}
+function genDbId() {
+  const n=new Date(), pfx=`DB-${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}`;
+  setV('db-id', `${pfx}-${String(toolDb.filter(r=>r.id.startsWith(pfx)).length+1).padStart(3,'0')}`);
+}
+
+function updateSubCat(catId,subId) {
+  const cat=getV(catId), sel=document.getElementById(subId);
+  if(!sel)return;
+  sel.innerHTML = cat
+    ? '<option value="">전체</option>'+(SUB[cat]||[]).map(s=>`<option>${s}</option>`).join('')
+    : '<option value="">카테고리 먼저 선택</option>';
+}
+function updSubCat(){updateSubCat('f-cat','f-sub');}
+
+function updateBadges() {
+  setV('bdg-led', loans.length);
+  setV('bdg-db', toolDb.length);
+  document.getElementById('bdg-led').textContent = loans.length;
+  document.getElementById('bdg-db').textContent  = toolDb.length;
+  document.getElementById('db-cnt').textContent  = toolDb.length;
+  // 모바일 바텀 네비 배지 업데이트
+  const mnLed=document.getElementById('mn-bdg-led');
+  const mnDb=document.getElementById('mn-bdg-db');
+  if(mnLed){mnLed.textContent=loans.length;mnLed.style.display=loans.length>0?'flex':'none';}
+  if(mnDb){mnDb.textContent=toolDb.length;mnDb.style.display=toolDb.length>0?'flex':'none';}
+}
+
+function dday(due, returned, perm) {
+  if(returned||perm) return null;
+  const t=new Date(); t.setHours(0,0,0,0);
+  const d=new Date(due); d.setHours(0,0,0,0);
+  return Math.floor((d-t)/86400000);
+}
+
+function toast(msg,type='') {
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const ic=type==='suc'?'✓':type==='err'?'✕':'ℹ';
+  const co=type==='suc'?'var(--green)':type==='err'?'var(--red)':'var(--accent2)';
+  el.innerHTML=`<span style="color:${co};font-weight:700">${ic}</span> ${msg}`;
+  document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTOCOMPLETE ENGINE
+// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  구입가격 천단위 자동 포맷
+// ═══════════════════════════════════════════════════
+// 통화별 구분 기호: 원/엔 → 쉼표(,) 구분, 달러 → 쉼표(,) 구분
+// 소수점: 원/엔 없음, 달러 2자리까지 허용
+function formatPriceInput(inp) {
+  const unit   = getV('db-price-unit') || '원';
+  const isDollar = unit === '달러';
+  let raw = inp.value.replace(/[^0-9.]/g, '');          // 숫자·점만 남김
+  if (!raw) { inp.value = ''; return; }
+
+  if (isDollar) {
+    // 달러: 소수점 2자리까지 허용
+    const parts = raw.split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = parts[1] !== undefined ? '.' + parts[1].slice(0, 2) : '';
+    inp.value = intPart + decPart;
+  } else {
+    // 원·엔: 정수만, 천단위 쉼표
+    raw = raw.replace(/\./g, '');
+    inp.value = parseInt(raw, 10).toLocaleString('ko-KR');
+  }
+}
+
+// 가격 표시 문자열 생성 (단위 포함)
+function formatPriceDisplay(price, unit) {
+  if (price == null || price === '') return '-';
+  const num = typeof price === 'string'
+    ? parseFloat(price.replace(/,/g, ''))
+    : price;
+  if (isNaN(num)) return '-';
+  const u = unit || '원';
+  if (u === '달러') return '$' + num.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2});
+  if (u === '엔')   return '¥' + num.toLocaleString('ja-JP');
+  return num.toLocaleString('ko-KR') + '원';
+}
+
+
+// ═══════════════════════════════════════════════════
+//  거래처 마스터 관리 (저장·삭제)
+// ═══════════════════════════════════════════════════
+const SK_CLIENTS = 'client_master_v1';
+let clientMaster = [];  // [{name, contact, phone}]
+
+async function loadClientMaster() {
+  try {
+    const saved = await idbGetConfig(SK_CLIENTS);
+    if(saved && saved.length > 0) {
+      clientMaster = saved;
+    } else {
+      // 최초 1회: 기존 toolDb.clients + 대출이력에서 자동 수집
+      const map = new Map();
+      toolDb.forEach(r=>{
+        (r.clients||[]).forEach(cl=>{
+          if(!cl.name) return;
+          const key = cl.name+'||'+(cl.contact||'');
+          map.set(key, {name:cl.name, contact:cl.contact||'', phone:cl.phone||''});
+        });
+      });
+      loans.forEach(r=>{
+        if(!r.borrower) return;
+        const key = r.borrower+'||'+(r.contact||'');
+        if(!map.has(key))
+          map.set(key, {name:r.borrower, contact:r.contact||'', phone:r.phone||''});
+      });
+      clientMaster = [...map.values()];
+      if(clientMaster.length > 0) await saveClientMaster();
+    }
+  } catch(e) {
+    clientMaster = [];
+  }
+}
+
+async function saveClientMaster() {
+  try { await idbPutConfig(SK_CLIENTS, clientMaster); } catch(e) {}
+}
+
+// 거래처 정보가 입력될 때 마스터에 추가/업데이트
+function upsertClientMaster(name, contact, phone) {
+  if (!name) return;
+  const key = name + '||' + (contact||'');
+  const idx = clientMaster.findIndex(c => c.name===name && c.contact===(contact||''));
+  if (idx >= 0) {
+    clientMaster[idx] = {name, contact:contact||'', phone:phone||''};
+  } else {
+    clientMaster.push({name, contact:contact||'', phone:phone||''});
+  }
+  saveClientMaster();
+}
+
+// 거래처 삭제
+async function deleteClientFromMaster(name, contact) {
+  clientMaster = clientMaster.filter(c => !(c.name===name && c.contact===(contact||'')));
+  await saveClientMaster();
+}
+
+
+// getBorrowerList: {name, contact, phone} 객체 배열 반환
+// 같은 업체에 여러 담당자도 개별 항목으로 모두 포함
+function getBorrowerList() {
+  // clientMaster만 소스로 사용.
+  // 삭제된 항목은 clientMaster에 없으므로 자동으로 제외됨.
+  // (대출 이력·toolDb.clients는 삭제 여부와 무관하게 기록 보존용이므로 드롭다운에 표시 안 함)
+  return clientMaster
+    .filter(cl => cl.name)
+    .slice()
+    .sort((a,b)=> a.name.localeCompare(b.name,'ko') || (a.contact||'').localeCompare(b.contact||'','ko'));
+}
+
+function getAcList(type) {
+  if(type==='makers') {
+    const s=new Set();
+    toolDb.forEach(r=>r.maker&&s.add(r.maker));
+    return [...s].sort((a,b)=>a.localeCompare(b,'ko'));
+  }
+  return [];
+}
+
+// 대출처 전용 자동완성 (담당자+연락처 표시)
+function acBorrowerFilter() {
+  var inp  = document.getElementById('f-borrower');
+  var drop = document.getElementById('ac-borrower');
+  if(!inp||!drop) return;
+  var q    = inp.value.toLowerCase().trim();
+  var list = getBorrowerList();
+  var filtered = q
+    ? list.filter(function(v){
+        return v.name.toLowerCase().indexOf(q)>=0 ||
+               (v.contact||'').toLowerCase().indexOf(q)>=0 ||
+               (v.phone||'').toLowerCase().indexOf(q)>=0;
+      })
+    : list;
+  if(!filtered.length) {
+    drop.innerHTML='<div class="ac-empty">등록된 거래처가 없습니다</div>';
+    drop.classList.add('open'); return;
+  }
+  // DOM 직접 생성 (이스케이프 문제 방지)
+  drop.innerHTML = '';
+  var lastCo = '';
+  if(!q) {
+    var sep0 = document.createElement('div');
+    sep0.className='ac-sep'; sep0.textContent='등록된 거래처';
+    drop.appendChild(sep0);
+  }
+  filtered.slice(0,15).forEach(function(v,i){
+    if(v.name !== lastCo) {
+      lastCo = v.name;
+      var hdr = document.createElement('div');
+      hdr.className='ac-sep';
+      hdr.style.cssText='color:var(--accent2);font-size:11px;';
+      hdr.textContent='🏢 '+v.name;
+      drop.appendChild(hdr);
+    }
+    var row = document.createElement('div');
+    row.className='ac-item';
+    row.style.paddingRight='4px';
+    row.dataset.idx=i;
+
+    var ico = document.createElement('span');
+    ico.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.4;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    row.appendChild(ico);
+
+    var lbl = document.createElement('span');
+    lbl.style.cssText='flex:1;cursor:pointer;';
+    lbl.textContent=(v.contact||'(담당자 미등록)')+(v.phone?' · '+v.phone:'');
+    (function(name,contact,phone){
+      lbl.addEventListener('click', function(){ acSelectBorrower(name,contact,phone); });
+    })(v.name, v.contact||'', v.phone||'');
+    row.appendChild(lbl);
+
+    var delBtn = document.createElement('button');
+    delBtn.title='이 거래처 삭제';
+    delBtn.textContent='🗑';
+    delBtn.style.cssText='margin-left:6px;padding:2px 6px;border-radius:4px;border:none;background:var(--red-dim);color:var(--red);cursor:pointer;font-size:10px;flex-shrink:0;';
+    (function(name,contact){
+      delBtn.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();});
+      delBtn.addEventListener('click',function(e){e.stopPropagation();removeBorrower(name,contact);});
+    })(v.name, v.contact||'');
+    row.appendChild(delBtn);
+
+    drop.appendChild(row);
+  });
+  drop.classList.add('open');
+}
+
+async function removeBorrower(name, contact) {
+  const label = name + (contact ? ' ('+contact+')' : '');
+  if(!confirm(label + '\n\n이 대출처를 삭제하시겠습니까?\n(이미 등록된 대출 기록은 보존됩니다)')) return;
+  await deleteClientFromMaster(name, contact);
+  acBorrowerFilter();
+  toast(label + ' 거래처 삭제 완료', 'suc');
+}
+
+
+
+function acSelectBorrower(name, contact, phone) {
+  setV('f-borrower', name);
+  document.getElementById('ac-borrower').classList.remove('open');
+  if(contact) {
+    setV('f-contact', contact);
+    document.getElementById('f-contact-auto').style.display='inline';
+    setTimeout(()=>document.getElementById('f-contact-auto').style.display='none', 2500);
+  }
+  if(phone) {
+    setV('f-phone', phone);
+    document.getElementById('f-phone-auto').style.display='inline';
+    setTimeout(()=>document.getElementById('f-phone-auto').style.display='none', 2500);
+  }
+  upsertClientMaster(name, contact, phone);
+}
+
+function acFilter(inputId, dropId, type) {
+  const inp = document.getElementById(inputId);
+  const drop = document.getElementById(dropId);
+  if(!inp||!drop) return;
+  const q = inp.value.toLowerCase().trim();
+  const list = getAcList(type);
+  const filtered = q ? list.filter(v=>v.toLowerCase().includes(q)) : list;
+  if(!filtered.length) {
+    drop.innerHTML='<div class="ac-empty">등록된 항목이 없습니다</div>';
+    drop.classList.add('open'); return;
+  }
+  drop.innerHTML = (q ? '' : `<div class="ac-sep">등록된 제조사</div>`) +
+    filtered.map((v,i)=>`<div class="ac-item" data-idx="${i}" onclick="acSelect('${inputId}','${dropId}','${v.replace(/'/g,"\\'")}')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.4"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      ${v}</div>`).join('');
+  drop.classList.add('open');
+}
+
+function acSelect(inputId, dropId, val) {
+  setV(inputId, val);
+  document.getElementById(dropId).classList.remove('open');
+}
+
+function acKey(e, dropId) {
+  const drop = document.getElementById(dropId);
+  const items = drop.querySelectorAll('.ac-item');
+  const focused = drop.querySelector('.ac-item.focused');
+  let idx = focused ? parseInt(focused.dataset.idx) : -1;
+  if(e.key==='ArrowDown') {
+    e.preventDefault();
+    idx = Math.min(idx+1, items.length-1);
+    items.forEach((el,i)=>el.classList.toggle('focused',i===idx));
+  } else if(e.key==='ArrowUp') {
+    e.preventDefault();
+    idx = Math.max(idx-1, 0);
+    items.forEach((el,i)=>el.classList.toggle('focused',i===idx));
+  } else if(e.key==='Enter' && focused) {
+    e.preventDefault();
+    focused.click();
+  } else if(e.key==='Escape') {
+    drop.classList.remove('open');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx=['t-reg','t-led','t-db'].indexOf(id);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  // 모바일 바텀 네비 동기화
+  const mnMap={'t-reg':'mn-reg','t-led':'mn-led','t-db':'mn-db'};
+  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
+  const mnEl=document.getElementById(mnMap[id]);
+  if(mnEl)mnEl.classList.add('active');
+  // 모바일에서 탭 전환 시 상단으로 스크롤
+  if(window.innerWidth<=768)window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='t-led'){updateStats();renderLed();}
+  if(id==='t-db'){renderDbList();}
+}
+
+// ═══════════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════════
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+['m-cert','m-multi-cert','m-return','m-unreturn','m-del','m-inuse','m-db-detail','m-restore'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeM(id);});
+});
+
+// ═══════════════════════════════════════════════════
+//  DB 대출처 행 추가/삭제
+// ═══════════════════════════════════════════════════
+function addDbClientRow(name='', contact='', phone='') {
+  const wrap = document.getElementById('db-clients-wrap');
+  if(!wrap) return;
+  const row = document.createElement('div');
+  row.className = 'db-client-row';
+  row.innerHTML = `
+    <input class="fi dbc-name" placeholder="업체명" value="${name}" autocomplete="off"
+      oninput="acDbClientFilter(this)" onfocus="acDbClientFilter(this)" onkeydown="acDbClientRowKey(event,this)">
+    <div class="ac-dropdown" style="position:absolute;z-index:600;min-width:200px;display:none;"></div>
+    <input class="fi dbc-contact" placeholder="담당자" value="${contact}">
+    <input class="fi dbc-phone" placeholder="연락처" value="${phone}">
+    <button type="button" class="client-del-btn" onclick="removeDbClientRow(this)" title="행 삭제 및 거래처 목록에서 제거">🗑</button>`;
+  // ac-dropdown을 ac-wrap으로 감싸야 위치가 맞으므로 첫 input을 ac-wrap으로 처리
+  const nameInp = row.querySelector('.dbc-name');
+  const drop = row.querySelector('.ac-dropdown');
+  // 위치 잡기: row를 relative로
+  row.style.position = 'relative';
+  drop.style.top = '100%';
+  drop.style.left = '0';
+  // 외부 클릭 시 닫기는 전역 핸들러가 처리 못 하므로 별도 처리
+  nameInp.addEventListener('blur', ()=>setTimeout(()=>drop.style.display='none', 180));
+  wrap.appendChild(row);
+}
+
+
+// ═══════════════════════════════════════════════════
+//  공구DB 대출처 행 삭제 (폼 + clientMaster + toolDb 동기화)
+// ═══════════════════════════════════════════════════
+async function removeDbClientRow(btn) {
+  const row     = btn.closest('.db-client-row');
+  const name    = (row.querySelector('.dbc-name')?.value||'').trim();
+  const contact = (row.querySelector('.dbc-contact')?.value||'').trim();
+
+  if(!name && !contact) { row.remove(); return; }
+
+  const label = name + (contact ? ' ('+contact+')' : '');
+  if(!confirm(label + '\n\n이 대출처를 삭제하시겠습니까?\n(이미 등록된 대출 기록은 보존됩니다)')) return;
+
+  // 1. 폼에서 행 제거
+  row.remove();
+
+  // 2. clientMaster에서 제거 → 대출품 등록탭 드롭다운에서도 사라짐
+  await deleteClientFromMaster(name, contact);
+
+  // 3. 현재 편집 중인 toolDb 항목의 clients에서도 제거 후 저장
+  const editId = getV('dbe-id');
+  if(editId) {
+    const idx = toolDb.findIndex(r=>r.id===editId);
+    if(idx >= 0) {
+      toolDb[idx].clients = (toolDb[idx].clients||[]).filter(
+        c => !(c.name===name && (c.contact||'')===(contact))
+      );
+      await saveToolDb();
+      renderDbList();
+      renderDbSearch();
+    }
+  }
+  toast(label + ' 대출처 삭제 완료', 'suc');
+}
+
+// DB 대출처 행의 업체명 자동완성
+function acDbClientFilter(inp) {
+  const row = inp.closest('.db-client-row');
+  const drop = row.querySelector('.ac-dropdown');
+  const q = inp.value.toLowerCase().trim();
+  const list = getBorrowerList();
+  const filtered = q ? list.filter(v=>v.name.toLowerCase().includes(q)) : list;
+  if(!filtered.length) { drop.style.display='none'; return; }
+  drop.innerHTML = filtered.slice(0,8).map((v,i)=>`
+    <div class="ac-item" data-idx="${i}"
+      onmousedown="event.preventDefault();acDbClientSelect(this.closest('.db-client-row'),'${v.name.replace(/'/g,"\\'")}','${(v.contact||'').replace(/'/g,"\\'")}','${(v.phone||'').replace(/'/g,"\\'")}')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.4;flex-shrink:0;"><path d="M3 21v-4a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v4"/><circle cx="12" cy="7" r="4"/></svg>
+      <span style="flex:1;">${v.name}</span>
+      ${v.contact||v.phone?`<span class="ac-item-sub">${[v.contact,v.phone].filter(Boolean).join(' · ')}</span>`:''}
+    </div>`).join('');
+  drop.style.display = 'block';
+}
+
+function acDbClientSelect(row, name, contact, phone) {
+  row.querySelector('.dbc-name').value = name;
+  if(contact) row.querySelector('.dbc-contact').value = contact;
+  if(phone)   row.querySelector('.dbc-phone').value   = phone;
+  row.querySelector('.ac-dropdown').style.display = 'none';
+}
+
+function acDbClientRowKey(e, inp) {
+  const drop = inp.closest('.db-client-row').querySelector('.ac-dropdown');
+  const items = drop.querySelectorAll('.ac-item');
+  const focused = drop.querySelector('.ac-item.focused');
+  let idx = focused ? parseInt(focused.dataset.idx) : -1;
+  if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('focused',i===idx));}
+  else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,0);items.forEach((el,i)=>el.classList.toggle('focused',i===idx));}
+  else if(e.key==='Enter'&&focused){e.preventDefault();focused.dispatchEvent(new MouseEvent('mousedown'));}
+  else if(e.key==='Escape'){drop.style.display='none';}
+}
+
+// ═══════════════════════════════════════════════════
+//  수량 재고 힌트 (실시간)
+// ═══════════════════════════════════════════════════
+function checkQtyLimit() {
+  const hint = document.getElementById('f-qty-hint');
+  const qtyInp = document.getElementById('f-qty');
+  const dbRef = document.getElementById('f-id').dataset.dbRef || '';
+  if(!hint || !qtyInp) return;
+  if(!dbRef) { hint.style.display='none'; return; }
+  const dbItem = toolDb.find(r=>r.id===dbRef);
+  if(!dbItem || !dbItem.totalQty || parseInt(dbItem.totalQty) <= 0) { hint.style.display='none'; return; }
+  const lentQty = loans.filter(l=>l.dbRef===dbRef && !l.returned)
+    .reduce((s,l)=>s+(parseInt(l.qty)||0), 0);
+  const total = parseInt(dbItem.totalQty)||0;
+  const avail = total - lentQty;
+  const entered = parseInt(qtyInp.value)||0;
+  const unit = dbItem.qtyUnit||'EA';
+  if(entered > avail) {
+    hint.className = 'qty-stock-err';
+    hint.textContent = `⚠ 재고 초과! 가용: ${avail}${unit} (총 ${total} 중 ${lentQty} 대출중)`;
+    qtyInp.style.borderColor = 'var(--red)';
+  } else if(avail <= total * 0.5) {
+    hint.className = 'qty-stock-warn';
+    hint.textContent = `재고 주의: 가용 ${avail}${unit} / 총 ${total}${unit}`;
+    qtyInp.style.borderColor = '';
+  } else {
+    hint.className = 'qty-stock-ok';
+    hint.textContent = `재고 여유: 가용 ${avail}${unit} / 총 ${total}${unit}`;
+    qtyInp.style.borderColor = '';
+  }
+  hint.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════
+//  PERMANENT TOGGLE
+// ═══════════════════════════════════════════════════
+function togglePerm() {
+  const c=document.getElementById('f-perm').checked;
+  document.getElementById('f-due').disabled=c;
+  if(c) setV('f-due','');
+}
+
+// ═══════════════════════════════════════════════════
+//  DB SEARCH PANEL (등록탭)
+// ═══════════════════════════════════════════════════
+function toggleDbSearch() {
+  dsOpen=!dsOpen;
+  document.getElementById('ds-panel').style.display=dsOpen?'block':'none';
+  document.getElementById('ds-toggle').textContent=dsOpen?'▲ 닫기':'▼ 열기';
+  if(dsOpen) renderDbSearch();
+}
+
+function renderDbSearch() {
+  const q=(getV('ds-q')||'').toLowerCase().trim();
+  const filtered = q
+    ? toolDb.filter(r=>[r.id,r.name,r.category,r.subCategory,r.spec,r.remark,r.maker,r.location,...(r.clients||[]).map(c=>c.name),...(r.partNumbers||[])]
+        .some(v=>(v||'').toLowerCase().includes(q)))
+    : toolDb;
+  const el=document.getElementById('ds-results');
+  if(!el) return;
+  if(!filtered.length){
+    el.innerHTML=`<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px;">${toolDb.length===0?'공구 DB가 비어 있습니다. [공구 DB] 탭에서 등록하세요.':'검색 결과 없음'}</div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(r=>{
+    const lentQty=loans.filter(l=>l.dbRef===r.id&&!l.returned).reduce((s,l)=>s+(parseInt(l.qty)||0),0);
+    const total=parseInt(r.totalQty)||0;
+    const avail=total-lentQty;
+    const hasQtyInfo = total > 0;
+    const noStock = hasQtyInfo && avail <= 0; // 수량 정보 있을 때만 재고없음 처리
+    const stockCls = !hasQtyInfo ? '' : avail<=0 ? 'stock-err' : avail<=(total/2) ? 'stock-warn' : 'stock-ok';
+    var dri_fn   = noStock ? "showInUseFromDb('" + r.id + "')" : "loadFromDb('" + r.id + "')";
+    var dri_btn  = noStock ? 'bd' : 'bp';
+    var dri_txt  = noStock ? '재고없음' : '불러오기';
+    var dri_photo = r.photo ? '<img src="' + r.photo + '" alt="">' : '📦';
+    var dri_stock = hasQtyInfo ? '<span class="stock-badge ' + stockCls + '" style="margin-left:6px;">재고 ' + avail + '/' + total + (r.qtyUnit||'EA') + '</span>' : '';
+    var dri_remark = r.remark ? '<div style="font-size:10px;color:var(--text3)">' + r.remark.slice(0,50) + (r.remark.length>50?'…':'') + '</div>' : '';
+    var dri_sub  = r.id + ' · ' + r.category + (r.subCategory?' / '+r.subCategory:'') + (r.spec?' · '+r.spec:'');
+    return '<div class="dri" onclick="' + dri_fn + '" style="' + (noStock?'opacity:.7':'') + '">'
+      + '<div class="drt">' + dri_photo + '</div>'
+      + '<div class="dri-info">'
+      + '<div class="dri-name">' + r.name + dri_stock + '</div>'
+      + '<div class="dri-sub">' + dri_sub + '</div>'
+      + partnoInlineTags(r.partNumbers, 4)
+      + dri_remark
+      + '</div>'
+      + '<button class="btn ' + dri_btn + ' btn-xs" style="flex-shrink:0;" onclick="event.stopPropagation();' + dri_fn + '">' + dri_txt + '</button>'
+      + '</div>';
+  }).join('');
+}
+
+function showInUseFromDb(dbId) {
+  const r=toolDb.find(x=>x.id===dbId);
+  const activeLoans = loans.filter(l=>l.dbRef===dbId && !l.returned);
+  const lentQty=activeLoans.reduce((s,l)=>s+(parseInt(l.qty)||0),0);
+  const total=parseInt(r?.totalQty)||0;
+  const avail=total-lentQty;
+  const loanList=activeLoans.map(l=>`<strong>${l.borrower}</strong> (${l.qty}${l.unit}, ${fmt(l.loanDate)}~)`).join('<br>');
+  document.getElementById('inuse-msg').innerHTML =
+    `현재 이 품목은 재고가 없습니다.<br><br>`+
+    `총 보유: <strong>${total}${r?.qtyUnit||'EA'}</strong> · 대출중: <strong>${lentQty}${r?.qtyUnit||'EA'}</strong> · 가용: <strong style="color:var(--red)">${avail}${r?.qtyUnit||'EA'}</strong><br><br>`+
+    (loanList?`📋 대출 현황:<br>${loanList}`:'');
+  openM('m-inuse');
+}
+
+function loadFromDb(dbId) {
+  const r=toolDb.find(x=>x.id===dbId);
+  if(!r) return;
+  setV('f-name', r.name||'');
+  setV('f-cat', r.category||'');
+  updateSubCat('f-cat','f-sub');
+  setTimeout(()=>setV('f-sub', r.subCategory||''), 60);
+  setV('f-spec', r.spec||'');
+  setV('f-remark', r.remark||'');
+  // 대출처 첫 번째 등록된 업체 자동입력
+  if(r.clients && r.clients.length>0) {
+    const cl=r.clients[0];
+    if(cl.name) acSelectBorrower(cl.name, cl.contact||'', cl.phone||'');
+  }
+  // ★ DB 관리번호를 대출품 등록 관리번호로 사용
+  setV('f-id', r.id);
+  document.getElementById('f-id').dataset.dbRef = r.id;
+  // 수량 힌트 갱신
+  checkQtyLimit();
+  // photo preview
+  const pp=document.getElementById('reg-photo-prev');
+  if(r.photo) pp.innerHTML='<img src="'+r.photo+'" alt="'+r.name+'" style="width:100%;border-radius:6px;">';
+  else pp.innerHTML='<div class="noph">등록된 사진이<br>없습니다</div>';
+  document.getElementById('reg-photo-name').textContent=r.name;
+  document.getElementById('reg-db-badge').style.display='inline-flex';
+  toast('불러옴: '+r.name+' (관리번호: '+r.id+')', 'suc');
+  dsOpen=false;
+  document.getElementById('ds-panel').style.display='none';
+  document.getElementById('ds-toggle').textContent='▼ 열기';
+}
+
+// ═══════════════════════════════════════════════════
+//  LOAN FORM — SAVE
+// ═══════════════════════════════════════════════════
+function getFormData() {
+  const perm=document.getElementById('f-perm').checked;
+  const dbRef=document.getElementById('f-id').dataset.dbRef||'';
+  return {
+    id: getV('f-id').trim(),
+    dbRef,
+    itemName: getV('f-name').trim(),
+    category: getV('f-cat'),
+    subCategory: getV('f-sub'),
+    spec: getV('f-spec').trim(),
+    qty: parseInt(getV('f-qty'))||1,
+    unit: getV('f-unit'),
+    borrower: getV('f-borrower').trim(),
+    contact: getV('f-contact').trim(),
+    phone: getV('f-phone').trim(),
+    loanDate: getV('f-loanDate'),
+    returnDueDate: perm?'영구대출':getV('f-due'),
+    permanent: perm,
+    purpose: getV('f-purpose').trim(),
+    remark: getV('f-remark').trim(),
+    returned: false, returnDate: null, printedAt: null,
+    createdAt: new Date().toISOString()
+  };
+}
+
+function validate(d) {
+  if(!d.id) return '관리번호를 입력하세요.';
+  if(!d.itemName) return '대출품명을 입력하세요.';
+  if(!d.category) return '카테고리를 선택하세요.';
+  if(!d.borrower) return '대출처를 입력하세요.';
+  if(!d.loanDate) return '대출일을 입력하세요.';
+  if(!d.permanent && !d.returnDueDate) return '반납예정일을 입력하거나 영구대출을 체크하세요.';
+  if(loans.some(r=>r.id===d.id)) return `관리번호 "${d.id}"가 이미 존재합니다.`;
+  // DB 연동 시 재고 수량 검사
+  if(d.dbRef) {
+    const dbItem = toolDb.find(r=>r.id===d.dbRef);
+    if(dbItem && dbItem.totalQty) {
+      const lentQty = loans.filter(l=>l.dbRef===d.dbRef && !l.returned)
+        .reduce((s,l)=>s+(parseInt(l.qty)||0), 0);
+      const avail = (parseInt(dbItem.totalQty)||0) - lentQty;
+      if(d.qty > avail) {
+        return `재고 수량 초과! 가용 수량: ${avail}${dbItem.qtyUnit||'EA'} (총 ${dbItem.totalQty} 중 ${lentQty} 대출중)`;
+      }
+    }
+  }
+  return null;
+}
+
+function saveRecord(doPrint) {
+  const d=getFormData();
+  const err=validate(d);
+  if(err){ toast(err,'err'); return null; }
+  loans.unshift(d); save(); updateBadges();
+  renderDbList(); renderDbSearch();
+  if(d.borrower) upsertClientMaster(d.borrower, d.contact||'', d.phone||'');
+  toast('저장 완료: '+d.id,'suc');
+  if(doPrint){ curCert=d; openCertModal(d); }
+  return d;
+}
+function saveAndPrint(){saveRecord(true);}
+
+function resetRegForm() {
+  ['f-name','f-spec','f-borrower','f-contact','f-phone','f-purpose','f-remark'].forEach(id=>setV(id,''));
+  setV('f-cat',''); setV('f-qty','1'); setV('f-unit','EA');
+  document.getElementById('f-perm').checked=false;
+  document.getElementById('f-due').disabled=false;
+  const t=new Date(); setV('f-loanDate',iso(t));
+  const d=new Date(t);d.setMonth(d.getMonth()+1);setV('f-due',iso(d));
+  updateSubCat('f-cat','f-sub'); genId();
+  document.getElementById('f-id').dataset.dbRef='';
+  document.getElementById('reg-db-badge').style.display='none';
+  document.getElementById('reg-photo-prev').innerHTML='<div class="noph">DB에서 품목을<br>불러오면 표시됩니다</div>';
+  document.getElementById('reg-photo-name').textContent='—';
+}
+
+// ═══════════════════════════════════════════════════
+//  CERT BUILD
+// ═══════════════════════════════════════════════════
+function buildCert(recs, co) {
+  // recs: array of loan records (single or multi)
+  const r0=recs[0];
+  const retStr = recs.map(r=>r.permanent?'영구대출':fmt(r.returnDueDate));
+  const dueDisplay = [...new Set(retStr)].join(', ');
+
+  const rows = recs.map((r,i)=>`<tr>
+    <td>${i+1}</td>
+    <td style="text-align:left;font-weight:600">${r.itemName}</td>
+    <td>${r.category}</td><td>${r.subCategory||'-'}</td>
+    <td>${r.spec||'-'}</td><td>${r.qty}</td><td>${r.unit}</td>
+    <td>${r.permanent?'♾ 영구':''}${r.returnDueDate!=='영구대출'?fmt(r.returnDueDate):''}</td>
+    <td style="text-align:left">${r.remark||''}</td>
+  </tr>`).join('');
+
+  const purposes=[...new Set(recs.map(r=>r.purpose).filter(Boolean))].join(' / ');
+  const ids=recs.map(r=>r.id).join(', ');
+
+  return `<div class="cert-hd"><div class="cert-co">${co}</div><div class="cert-title">대 출 증</div></div>
+  <div class="cert-body">
+    <div class="cert-no">관리번호: ${ids}</div>
+    <div class="cert-ig">
+      <div class="cert-ic"><div class="cert-il">대출처</div><div class="cert-iv">${r0.borrower||'-'}</div></div>
+      <div class="cert-ic"><div class="cert-il">담당자</div><div class="cert-iv">${r0.contact||'-'} ${r0.phone?'/ '+r0.phone:''}</div></div>
+      <div class="cert-ic"><div class="cert-il">대출일</div><div class="cert-iv">${fmt(r0.loanDate)}</div></div>
+      <div class="cert-ic"><div class="cert-il">반납예정일</div><div class="cert-iv">${dueDisplay}</div></div>
+    </div>
+    <table class="cert-table"><thead><tr>
+      <th>No.</th><th>품명</th><th>분류</th><th>세부</th><th>규격</th><th>수량</th><th>단위</th><th>반납예정</th><th>비고</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="cert-pur"><div class="cert-pur-l">대출목적</div><div class="cert-pur-v">${purposes||'　'}</div></div>
+    <div class="cert-decl">위 물품을 정히 수령하였으며, 반납예정일까지 반납할 것을 확인합니다.</div>
+    <div class="cert-sg">
+      <div class="cert-sb"><div class="cert-sl">대출처 (인)</div><div class="cert-sline"></div></div>
+      <div class="cert-sb"><div class="cert-sl">담당자 (인)</div><div class="cert-sline"></div></div>
+      <div class="cert-sb"><div class="cert-sl">부서장 (인)</div><div class="cert-sline"></div></div>
+      <div class="cert-sb"><div class="cert-sl">확인일: ${fmt(new Date())}</div><div class="cert-sline"></div></div>
+    </div>
+  </div>`;
+}
+
+function openCertModal(rec) {
+  const co=(document.getElementById('companyInput').value||'(회사명)');
+  document.getElementById('cert-content').innerHTML=buildCert([rec],co);
+  openM('m-cert');
+}
+function printCert() {
+  if(!curCert) return;
+  const co=(document.getElementById('companyInput').value||'(회사명)');
+  doPrint(buildCert([curCert],co), [curCert.id]);
+}
+function viewCert(id){
+  const r=loans.find(x=>x.id===id);if(!r)return;
+  curCert=r;openCertModal(r);
+}
+
+function doPrint(html, ids) {
+  const pa=document.getElementById('print-area');
+  pa.innerHTML=html; pa.style.display='block';
+  ['header','tabs'].forEach(c=>{const el=document.querySelector('.'+c);if(el)el.style.display='none';});
+  document.querySelector('.main').style.display='none';
+  window.print();
+  setTimeout(()=>{
+    pa.style.display='none';
+    ['header','tabs'].forEach(c=>{const el=document.querySelector('.'+c);if(el)el.style.display='';});
+    document.querySelector('.main').style.display='';
+    ids.forEach(id=>{
+      const idx=loans.findIndex(r=>r.id===id);
+      if(idx>=0){loans[idx].printedAt=new Date().toISOString();save();}
+    });
+    renderLed();
+  },600);
+}
+
+// ═══════════════════════════════════════════════════
+//  MULTI-CERT
+// ═══════════════════════════════════════════════════
+function openMultiCertModal() {
+  // populate borrower filter
+  const borrowers=[...new Set(loans.filter(l=>!l.returned).map(l=>l.borrower))].sort((a,b)=>a.localeCompare(b,'ko'));
+  const sel=document.getElementById('mc-borrower-filter');
+  sel.innerHTML='<option value="">— 대출처 선택 (필터) —</option>'+borrowers.map(b=>`<option value="${b}">${b}</option>`).join('');
+  renderMultiCertList();
+  openM('m-multi-cert');
+}
+function renderMultiCertList() {
+  const bfil=getV('mc-borrower-filter');
+  const list=loans.filter(l=>!l.returned && (!bfil||l.borrower===bfil));
+  const el=document.getElementById('mc-list');
+  if(!list.length){el.innerHTML='<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px;">대출중인 항목이 없습니다.</div>';return;}
+  el.innerHTML=list.map(r=>`
+    <div class="cert-chk-row">
+      <input type="checkbox" id="mc-${r.id}" value="${r.id}" onchange="updateMcInfo()">
+      <div class="cert-chk-info">
+        <div class="cert-chk-name">${r.itemName} <span style="color:var(--text3);font-size:10px;">[${r.id}]</span></div>
+        <div class="cert-chk-sub">${r.borrower} · ${r.loanDate} → ${r.permanent?'영구대출':r.returnDueDate}</div>
+      </div>
+    </div>`).join('');
+  updateMcInfo();
+}
+function mcSelectAll(v) {
+  document.querySelectorAll('#mc-list input[type=checkbox]').forEach(c=>c.checked=v);
+  updateMcInfo();
+}
+function updateMcInfo() {
+  const cnt=document.querySelectorAll('#mc-list input[type=checkbox]:checked').length;
+  document.getElementById('mc-selected-info').textContent=`선택된 항목: ${cnt}건`;
+}
+function printMultiCert() {
+  const ids=[...document.querySelectorAll('#mc-list input[type=checkbox]:checked')].map(c=>c.value);
+  if(!ids.length){toast('출력할 항목을 선택하세요.','err');return;}
+  const recs=ids.map(id=>loans.find(r=>r.id===id)).filter(Boolean);
+  // group by borrower for per-page output
+  const byBorrower={};
+  recs.forEach(r=>{if(!byBorrower[r.borrower])byBorrower[r.borrower]=[];byBorrower[r.borrower].push(r);});
+  const co=(document.getElementById('companyInput').value||'(회사명)');
+  const pages=Object.values(byBorrower);
+  const html=pages.map((grp,i)=>`<div class="loan-cert${i>0?' cert-page-break':''}">${buildCert(grp,co)}</div>`).join('');
+  closeM('m-multi-cert');
+  doPrint(html, ids);
+}
+
+// ═══════════════════════════════════════════════════
+//  LEDGER
+// ═══════════════════════════════════════════════════
+function getFiltered() {
+  const q=getV('l-q').toLowerCase();
+  const cat=getV('l-cat'), st=getV('l-status');
+  const df=getV('l-df'), dt=getV('l-dt');
+  const today=new Date();today.setHours(0,0,0,0);
+  return loans.filter(r=>{
+    if(q&&![r.id,r.itemName,r.borrower].some(v=>(v||'').toLowerCase().includes(q)))return false;
+    if(cat&&r.category!==cat)return false;
+    if(df&&r.loanDate<df)return false;
+    if(dt&&r.loanDate>dt)return false;
+    if(st){
+      const dd=dday(r.returnDueDate,r.returned,r.permanent);
+      if(st==='returned'&&!r.returned)return false;
+      if(st==='perm'&&!r.permanent)return false;
+      if(st==='active'){if(r.returned||r.permanent||(dd!==null&&dd<0))return false;}
+      if(st==='overdue'){if(r.returned||r.permanent||dd===null||dd>=0)return false;}
+    }
+    return true;
+  });
+}
+function sortRecs(arr){
+  return[...arr].sort((a,b)=>{
+    let va=a[sortF]??'',vb=b[sortF]??'';
+    return(typeof va==='number'?(va-vb):String(va).localeCompare(String(vb),'ko'))*sortD;
+  });
+}
+function renderLed(){
+  const fil=sortRecs(getFiltered());
+  const total=fil.length;
+  const totalPg=Math.max(1,Math.ceil(total/pgSz));
+  if(pg>totalPg)pg=totalPg;
+  const st=(pg-1)*pgSz;
+  const page=fil.slice(st,st+pgSz);
+  const tbody=document.getElementById('led-body');
+  if(!page.length){
+    tbody.innerHTML=`<tr><td colspan="12"><div class="es"><div class="es-icon">📋</div>조건에 맞는 데이터 없음</div></td></tr>`;
+  } else {
+    tbody.innerHTML=page.map(r=>{
+      const dd=dday(r.returnDueDate,r.returned,r.permanent);
+      let ddHtml='';
+      if(r.returned) ddHtml=`<span class="badge br">반납완료</span>`;
+      else if(r.permanent) ddHtml=`<span class="badge bp2">♾ 영구</span>`;
+      else if(dd===null) ddHtml='-';
+      else if(dd<0) ddHtml=`<span class="dday late">+${Math.abs(dd)}일 초과</span>`;
+      else if(dd<=7) ddHtml=`<span class="dday warn">D-${dd}</span>`;
+      else ddHtml=`<span class="dday ok">D-${dd}</span>`;
+      const rc=r.returned?'tr-returned':(r.permanent?'tr-perm':(dd!==null&&dd<0?'tr-overdue':''));
+      const cb=CB[r.category]||'bc4';
+      const retDue=r.permanent?`<span class="perm-badge">♾ 영구</span>`:r.returnDueDate;
+      return`<tr class="${rc}">
+        <td data-label="관리번호"><span style="font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace">${r.id}</span></td>
+        <td data-label="품명" style="max-width:150px;overflow:hidden;text-overflow:ellipsis" title="${r.itemName}"><strong>${r.itemName}</strong>${r.subCategory?`<br><span style="font-size:10px;color:var(--text3)">${r.subCategory}</span>`:''}</td>
+        <td data-label="분류"><span class="badge ${cb}">${r.category}</span></td>
+        <td data-label="규격" style="color:var(--text2)">${r.spec||'-'}</td>
+        <td data-label="수량" style="text-align:center">${r.qty} ${r.unit}</td>
+        <td data-label="대출처">${r.borrower}<br><span style="font-size:10px;color:var(--text3)">${r.contact||''} ${r.phone||''}</span></td>
+        <td data-label="대출일" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${r.loanDate}</td>
+        <td data-label="반납예정" style="font-size:11px;">${retDue}</td>
+        <td data-label="D-Day" style="text-align:center">${ddHtml}</td>
+        <td data-label="반납여부" style="text-align:center">${r.returned?'<span class="reto">O</span>':'<span style="color:var(--text3)">—</span>'}</td>
+        <td data-label="반납일" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${r.returnDate||'-'}</td>
+        <td class="td-action">
+          <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap">
+            <button class="btn bo btn-xs" onclick="viewCert('${r.id}')">대출증</button>
+            ${r.returned
+              ? `<button class="btn bw btn-xs" onclick="openUnreturnModal('${r.id}')">반납취소</button>`
+              : `<button class="btn bs btn-xs" onclick="openReturnModal('${r.id}')">반납처리</button>`}
+            <button class="btn bd btn-xs" onclick="openDelModal('${r.id}','loan')">삭제</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('pg-info').textContent=total>0?`총 ${total}건 중 ${st+1}~${Math.min(st+pgSz,total)}건`:'0건';
+  renderPgn(totalPg);
+  updateStats();
+}
+function renderPgn(tp){
+  const el=document.getElementById('pgn');
+  if(tp<=1){el.innerHTML='';return;}
+  let pages=[];
+  if(tp<=7)pages=Array.from({length:tp},(_,i)=>i+1);
+  else{pages=[1];if(pg>3)pages.push('…');for(let i=Math.max(2,pg-1);i<=Math.min(tp-1,pg+1);i++)pages.push(i);if(pg<tp-2)pages.push('…');pages.push(tp);}
+  el.innerHTML=`<button class="pb" onclick="goP(${pg-1})" ${pg===1?'disabled':''}>‹</button>`+
+    pages.map(p=>p==='…'?`<span class="pb" style="cursor:default;opacity:.4">…</span>`:`<button class="pb ${p===pg?'act':''}" onclick="goP(${p})">${p}</button>`).join('')+
+    `<button class="pb" onclick="goP(${pg+1})" ${pg===tp?'disabled':''}>›</button>`;
+}
+function goP(p){const t=Math.max(1,Math.ceil(getFiltered().length/pgSz));pg=Math.max(1,Math.min(p,t));renderLed();}
+function changePgSize(){pgSz=parseInt(getV('pg-size'));pg=1;renderLed();}
+function sortBy(f){if(sortF===f)sortD*=-1;else{sortF=f;sortD=1;}renderLed();}
+function clearLedFilter(){['l-q','l-df','l-dt'].forEach(id=>setV(id,''));['l-cat','l-status'].forEach(id=>setV(id,''));renderLed();}
+function updateStats(){
+  const today=new Date();today.setHours(0,0,0,0);
+  document.getElementById('st-total').textContent=loans.length;
+  document.getElementById('st-done').textContent=loans.filter(r=>r.returned).length;
+  document.getElementById('st-active').textContent=loans.filter(r=>!r.returned).length;
+  document.getElementById('st-over').textContent=loans.filter(r=>{
+    if(r.returned||r.permanent)return false;
+    const d=new Date(r.returnDueDate);d.setHours(0,0,0,0);return d<today;
+  }).length;
+}
+
+// ═══════════════════════════════════════════════════
+//  RETURN / UNRETURN
+// ═══════════════════════════════════════════════════
+function openReturnModal(id){
+  pendRet=id;
+  const r=loans.find(x=>x.id===id);
+  document.getElementById('ret-info').innerHTML=`<strong>${r.itemName}</strong><br><span style="color:var(--text3)">대출처: ${r.borrower} | 대출일: ${r.loanDate}</span>`;
+  setV('ret-date',iso(new Date()));
+  openM('m-return');
+}
+function confirmReturn(){
+  const idx=loans.findIndex(r=>r.id===pendRet);if(idx<0)return;
+  loans[idx].returned=true; loans[idx].returnDate=getV('ret-date');
+  save();renderLed();renderDbList();renderDbSearch();
+  closeM('m-return');
+  toast(`반납 처리: ${loans[idx].id}`,'suc');
+}
+
+function openUnreturnModal(id){
+  pendUnret=id;
+  const r=loans.find(x=>x.id===id);
+  document.getElementById('unret-info').innerHTML=`<strong>${r.itemName}</strong><br><span style="color:var(--text3)">대출처: ${r.borrower} | 반납일: ${r.returnDate}</span>`;
+  openM('m-unreturn');
+}
+function confirmUnreturn(){
+  const idx=loans.findIndex(r=>r.id===pendUnret);if(idx<0)return;
+  loans[idx].returned=false; loans[idx].returnDate=null;
+  save();renderLed();renderDbList();renderDbSearch();
+  closeM('m-unreturn');
+  toast(`반납 취소 (대출중): ${loans[idx].id}`,'suc');
+}
+
+// ═══════════════════════════════════════════════════
+//  DELETE
+// ═══════════════════════════════════════════════════
+function openDelModal(id,tgt){
+  pendDel=id;delTgt=tgt;
+  const r=tgt==='loan'?loans.find(x=>x.id===id):toolDb.find(x=>x.id===id);
+  document.getElementById('del-info').textContent=`[${r.id}] ${tgt==='loan'?r.itemName:r.name}`;
+  openM('m-del');
+}
+function confirmDelete(){
+  if(delTgt==='loan'){
+    const idx=loans.findIndex(r=>r.id===pendDel);if(idx<0)return;
+    const id=loans[idx].id;loans.splice(idx,1);save();updateBadges();renderLed();
+    toast(`삭제: ${id}`);
+  } else {
+    const idx=toolDb.findIndex(r=>r.id===pendDel);if(idx<0)return;
+    const nm=toolDb[idx].name;toolDb.splice(idx,1);saveDb();updateBadges();renderDbList();renderDbSearch();
+    toast(`DB 삭제: ${nm}`);
+  }
+  closeM('m-del');
+}
+
+// ═══════════════════════════════════════════════════
+//  CSV
+// ═══════════════════════════════════════════════════
+function exportCSV(){
+  if(!loans.length){toast('데이터 없음','err');return;}
+  const h=['관리번호','대출품명','카테고리','세부분류','규격','수량','단위','대출처','담당자','연락처','대출일','반납예정일','영구대출','반납여부','반납일','대출목적','비고'];
+  const rows=loans.map(r=>[r.id,r.itemName,r.category,r.subCategory||'',r.spec||'',r.qty,r.unit,r.borrower,r.contact||'',r.phone||'',r.loanDate,r.permanent?'영구대출':r.returnDueDate,r.permanent?'O':'',r.returned?'O':'',r.returnDate||'',r.purpose||'',r.remark||'']);
+  const csv=[h,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='대출관리대장_'+iso(new Date())+'.csv';
+  a.style.display='none'; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href);},300);
+}
+
+// ═══════════════════════════════════════════════════
+//  DB FORM
+// ═══════════════════════════════════════════════════
+function toggleDbForm(){
+  dbFormOpen=!dbFormOpen;
+  document.getElementById('dbf-panel').style.display=dbFormOpen?'block':'none';
+  document.getElementById('dbf-toggle').textContent=dbFormOpen?'▲ 폼 닫기':'▼ 폼 열기';
+  if(dbFormOpen&&!getV('db-id'))genDbId();
+}
+async function handlePhoto(e){
+  const file=e.target.files[0]; if(!file) return;
+  // 최대 800×800px, JPEG 품질 0.75 로 압축 (원본 대비 약 5~15배 용량 절감)
+  const data = await compressImage(file, 800, 800, 0.75);
+  const origKB  = Math.round(file.size / 1024);
+  const compKB  = Math.round(data.length * 0.75 / 1024);
+  setV('db-photo', data);
+  document.getElementById('db-photo-thumb').src = data;
+  document.getElementById('db-photo-up-wrap').style.display  = 'none';
+  document.getElementById('db-photo-thumb-wrap').style.display = 'block';
+  toast('사진 압축 완료: ' + origKB + 'KB → ' + compKB + 'KB', 'suc');
+}
+function removePhoto(){
+  setV('db-photo',''); setV('db-photo-file','');
+  document.getElementById('db-photo-thumb').src='';
+  document.getElementById('db-photo-up-wrap').style.display='block';
+  document.getElementById('db-photo-thumb-wrap').style.display='none';
+}
+function getDbData(){
+  // clients 수집
+  const clients = [];
+  document.querySelectorAll('#db-clients-wrap .db-client-row').forEach(row=>{
+    const name = row.querySelector('.dbc-name')?.value?.trim();
+    const contact = row.querySelector('.dbc-contact')?.value?.trim();
+    const phone = row.querySelector('.dbc-phone')?.value?.trim();
+    if(name||contact||phone) clients.push({name:name||'', contact:contact||'', phone:phone||''});
+  });
+  // 가공품 도번 파싱 (쉼표·줄바꿈·세미콜론 구분)
+  const partRaw = getV('db-partno');
+  const partNumbers = partRaw
+    ? partRaw.split(/[,\n;]+/).map(s=>s.trim()).filter(Boolean)
+    : [];
+  return{
+    id:getV('db-id').trim(),
+    name:getV('db-name').trim(),
+    category:getV('db-cat'),
+    subCategory:getV('db-sub'),
+    spec:getV('db-spec').trim(),
+    maker:getV('db-maker').trim(),
+    purchaseDate:getV('db-pdate'),
+    price: getV('db-price') ? (parseInt(getV('db-price').replace(/[^0-9]/g,''))||0) : null,
+    priceUnit: getV('db-price-unit')||'원',
+    location:getV('db-loc').trim(),
+    totalQty: parseInt(getV('db-total-qty'))||1,
+    qtyUnit: getV('db-qty-unit')||'EA',
+    clients,
+    partNumbers,
+    remark:getV('db-remark').trim(),
+    photo:getV('db-photo'),
+    createdAt:new Date().toISOString()
+  };
+}
+function saveDbItem(){
+  const d=getDbData();
+  if(!d.id){toast('관리번호 입력','err');return;}
+  if(!d.name){toast('품명 입력','err');return;}
+  if(!d.category){toast('카테고리 선택','err');return;}
+  const editId=getV('dbe-id');
+  if(editId){
+    // ── 수정 모드: 관리번호를 변경한 경우 다른 항목과 중복 여부 체크 ──
+    if(d.id !== editId) {
+      // 관리번호가 바뀐 경우 → 기존 다른 항목에 동일 ID가 있으면 차단
+      const conflict = toolDb.find(r => r.id === d.id);
+      if(conflict) {
+        alert('⚠️ DB 관리번호 중복\n\n변경하려는 관리번호 [' + d.id + '] 가 이미 등록된 항목과 중복됩니다.\n\n중복 항목: ' + conflict.name + ' (' + conflict.category + ')\n\n다른 관리번호를 입력해 주세요.');
+        return;
+      }
+    }
+    const idx=toolDb.findIndex(r=>r.id===editId);
+    if(idx>=0){d.createdAt=toolDb[idx].createdAt;d.updatedAt=new Date().toISOString();toolDb[idx]=d;}
+    toast('수정 완료: '+d.name,'suc');
+    setV('dbe-id','');
+    document.getElementById('db-save-txt').textContent='DB에 저장';
+  } else {
+    // ── 신규 등록: 동일 관리번호 중복 체크 ──
+    if(toolDb.some(r=>r.id===d.id)){toast('관리번호 중복: '+d.id,'err');return;}
+    toolDb.unshift(d);
+    toast('DB 등록: '+d.name,'suc');
+  }
+  saveDb();updateBadges();renderDbList();renderDbSearch();resetDbForm();
+}
+function resetDbForm(){
+  ['db-id','db-name','db-spec','db-maker','db-loc','db-remark','db-partno','db-price','dbe-id'].forEach(id=>setV(id,''));
+  setV('db-price-unit','원');
+  document.getElementById('db-partno-tags').innerHTML='';
+  setV('db-cat',''); setV('db-pdate',''); setV('db-photo',''); setV('db-photo-file','');
+  setV('db-total-qty','1'); setV('db-qty-unit','EA');
+  document.getElementById('db-photo-thumb').src='';
+  document.getElementById('db-photo-up-wrap').style.display='block';
+  document.getElementById('db-photo-thumb-wrap').style.display='none';
+  document.getElementById('db-save-txt').textContent='DB에 저장';
+  document.getElementById('db-clients-wrap').innerHTML='';
+  addDbClientRow(); // 기본 1행
+  updateSubCat('db-cat','db-sub'); genDbId();
+}
+
+// ═══════════════════════════════════════════════════
+//  DB LIST
+// ═══════════════════════════════════════════════════
+function renderDbList(){
+  const q=(getV('dbl-q')||'').toLowerCase();
+  const cat=getV('dbl-cat')||'';
+  const filtered=toolDb.filter(r=>{
+    if(cat&&r.category!==cat)return false;
+    if(q&&![r.id,r.name,r.spec,r.remark,r.location,r.maker,...(r.clients||[]).map(c=>c.name),...(r.partNumbers||[])].some(v=>(v||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  document.getElementById('db-cnt').textContent=toolDb.length;
+  const grid=document.getElementById('db-card-grid');
+  const empty=document.getElementById('db-empty');
+  if(!filtered.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=filtered.map(r=>{
+    const lentQty=loans.filter(l=>l.dbRef===r.id&&!l.returned).reduce((s,l)=>s+(parseInt(l.qty)||0),0);
+    const total=parseInt(r.totalQty)||0;
+    const avail=total-lentQty;
+    const hasQtyInfo = total > 0;
+    const inUse = lentQty > 0;
+    const noStock = hasQtyInfo && avail <= 0;
+    const stockCls = !hasQtyInfo ? 'stock-ok' : avail<=0 ? 'stock-err' : avail<=(total/2) ? 'stock-warn' : 'stock-ok';
+    return`<div class="db-card" style="${noStock?'border-color:var(--red);':inUse?'border-color:var(--orange);':''}" onclick="openDbDetail('${r.id}')">
+      <div class="dc-img">${r.photo?`<img src="${r.photo}" alt="">`:'📦'}</div>
+      <div class="dc-body">
+        <div class="dc-id">${r.id}</div>
+        <div class="dc-name" title="${r.name}">${r.name}</div>
+        <div style="margin:3px 0;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+          <span class="badge ${CB[r.category]||'bc4'}">${r.category}</span>
+          ${hasQtyInfo?`<span class="stock-badge ${stockCls}">재고 ${avail}/${total}</span>`:''}
+        </div>
+        <div class="dc-meta">${r.spec||''} ${r.location?'· '+r.location:''}</div>
+        ${r.maker?`<div class="dc-meta">${r.maker}</div>`:''}
+        ${inUse?'<div style="font-size:10px;color:var(--orange);margin-top:3px;font-weight:600;">● '+lentQty+(r.qtyUnit||'EA')+' 대출중</div>':''}
+        ${partnoInlineTags(r.partNumbers, 3)}
+        <div style="display:flex;gap:4px;margin-top:8px;" onclick="event.stopPropagation()">
+          <button class="btn bo btn-xs" style="flex:1;" onclick="editDbItem('${r.id}')">✏️ 수정</button>
+          <button class="btn bo btn-xs" style="flex:1;" onclick="cloneDbItem('${r.id}')" title="이 항목을 복제하여 신규 등록">📋 복제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openDbDetail(id){
+  const r=toolDb.find(x=>x.id===id);if(!r)return;
+  curDbDetail=id;
+  document.getElementById('dbd-title').textContent=r.name;
+  const activeLoans=loans.filter(l=>l.dbRef===id&&!l.returned);
+  const lentQty=activeLoans.reduce((s,l)=>s+(parseInt(l.qty)||0),0);
+  const total=parseInt(r.totalQty)||0;
+  const hasQtyInfo = total > 0;
+  const avail=total-lentQty;
+  const stockCls=!hasQtyInfo?'stock-ok':avail<=0?'stock-err':avail<=(total/2)?'stock-warn':'stock-ok';
+  const clientsHtml = (r.clients||[]).length
+    ? (r.clients||[]).map(c=>`<div style="display:flex;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">
+        <span style="flex:1;font-weight:600;">${c.name||'—'}</span>
+        <span style="color:var(--text3)">${c.contact||''}</span>
+        <span style="color:var(--text3)">${c.phone||''}</span>
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3)">등록된 대출처 없음</div>';
+  document.getElementById('dbd-body').innerHTML=`
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex-shrink:0;">
+        ${r.photo?`<img src="${r.photo}" alt="" style="width:130px;height:130px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">`
+          :`<div style="width:130px;height:130px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:44px;">📦</div>`}
+        <div style="margin-top:8px;text-align:center;">
+          ${hasQtyInfo?`<span class="stock-badge ${stockCls}">재고 ${avail}/${r.totalQty} ${r.qtyUnit||'EA'}</span>`:'<span style="font-size:10px;color:var(--text3)">수량 미등록</span>'}
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px;">
+        <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:5px;">${r.id}</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:10px;">${r.name}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:12px;">
+          <div><span style="color:var(--text3)">카테고리:</span> <span class="badge ${CB[r.category]||'bc4'}">${r.category}</span></div>
+          <div><span style="color:var(--text3)">세부:</span> ${r.subCategory||'-'}</div>
+          <div><span style="color:var(--text3)">규격:</span> ${r.spec||'-'}</div>
+          <div><span style="color:var(--text3)">제조사:</span> ${r.maker||'-'}</div>
+          <div><span style="color:var(--text3)">구입일:</span> ${r.purchaseDate?fmt(r.purchaseDate):'-'}</div>
+          <div><span style="color:var(--text3)">구입가:</span> ${formatPriceDisplay(r.price, r.priceUnit)}</div>
+          <div><span style="color:var(--text3)">위치:</span> ${r.location||'-'}</div>
+        </div>
+        ${(r.partNumbers&&r.partNumbers.length)?`
+          <div style="margin-top:10px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">가공품 도번</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">${partnoTagsFull(r.partNumbers)}</div>
+          </div>`:''
+        }
+        ${r.remark?`<div style="margin-top:9px;padding:9px;background:var(--bg3);border-radius:7px;font-size:12px;color:var(--text2);">${r.remark}</div>`:''}
+        <div style="margin-top:10px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">등록된 대출처</div>
+          ${clientsHtml}
+        </div>
+        ${activeLoans.length?`<div style="margin-top:9px;padding:9px;background:var(--orange-dim);border-radius:7px;font-size:12px;color:var(--orange);border:1px solid rgba(249,115,22,.3);">
+          ● 현재 ${activeLoans.map(l=>'<strong>'+l.borrower+'</strong> ('+l.qty+l.unit+')').join(', ')} 대출중</div>`:''}
+      </div>
+    </div>`;
+  document.getElementById('dbd-edit-btn').onclick=()=>{editDbItem(id);closeM('m-db-detail');};
+  document.getElementById('dbd-clone-btn').onclick=()=>{cloneDbItem(id);closeM('m-db-detail');};
+  document.getElementById('dbd-del-btn').onclick=()=>{closeM('m-db-detail');openDelModal(id,'db');};
+  document.getElementById('dbd-load-btn').onclick=()=>{loadFromDb(id);closeM('m-db-detail');switchTab('t-reg');};
+  openM('m-db-detail');
+}
+// ═══════════════════════════════════════════════════
+//  DB 항목 복제 신규 등록
+// ═══════════════════════════════════════════════════
+function cloneDbItem(id) {
+  const r = toolDb.find(x=>x.id===id);
+  if(!r) return;
+  // 폼이 닫혀있으면 열기
+  if(!dbFormOpen) toggleDbForm();
+  // 편집 ID는 비움 (새 항목)
+  setV('dbe-id', '');
+  // 데이터 채우기
+  setV('db-name',  r.name||'');
+  setV('db-cat',   r.category||'');
+  updateSubCat('db-cat','db-sub');
+  setTimeout(()=>setV('db-sub', r.subCategory||''), 60);
+  setV('db-spec',  r.spec||'');
+  setV('db-maker', r.maker||'');
+  setV('db-pdate', r.purchaseDate||'');
+  setV('db-price', r.price != null ? r.price.toLocaleString('ko-KR') : '');
+  setV('db-price-unit', r.priceUnit||'원');
+  setV('db-loc',   r.location||'');
+  setV('db-total-qty', r.totalQty||1);
+  setV('db-qty-unit',  r.qtyUnit||'EA');
+  setV('db-partno', (r.partNumbers||[]).join(', '));
+  renderPartnoTags();
+  setV('db-remark', r.remark||'');
+  // 사진 복사
+  setV('db-photo', r.photo||'');
+  if(r.photo) {
+    document.getElementById('db-photo-thumb').src = r.photo;
+    document.getElementById('db-photo-up-wrap').style.display = 'none';
+    document.getElementById('db-photo-thumb-wrap').style.display = 'block';
+  } else {
+    document.getElementById('db-photo-up-wrap').style.display = 'block';
+    document.getElementById('db-photo-thumb-wrap').style.display = 'none';
+  }
+  // 대출처 목록 복사
+  document.getElementById('db-clients-wrap').innerHTML = '';
+  (r.clients||[]).forEach(cl=>addDbClientRow(cl.name, cl.contact, cl.phone));
+  if(!(r.clients&&r.clients.length)) addDbClientRow();
+  // 새 관리번호 자동생성
+  genDbId();
+  document.getElementById('db-save-txt').textContent = 'DB에 저장 (복제)';
+  document.getElementById('dbf-panel').scrollIntoView({behavior:'smooth'});
+  toast('복제 모드: '+r.name+' → 내용을 확인 후 저장하세요.', 'suc');
+}
+
+
+function editDbItem(id){
+  const r=toolDb.find(x=>x.id===id);if(!r)return;
+  if(!dbFormOpen)toggleDbForm();
+  setV('dbe-id',r.id); setV('db-id',r.id); setV('db-name',r.name||'');
+  setV('db-cat',r.category||''); updateSubCat('db-cat','db-sub');
+  setTimeout(()=>setV('db-sub',r.subCategory||''),60);
+  setV('db-spec',r.spec||''); setV('db-maker',r.maker||'');
+  setV('db-pdate',r.purchaseDate||''); setV('db-loc',r.location||'');
+  setV('db-total-qty', r.totalQty||1); setV('db-qty-unit', r.qtyUnit||'EA');
+  setV('db-price', r.price != null ? r.price.toLocaleString('ko-KR') : ''); setV('db-price-unit', r.priceUnit||'원');
+  setV('db-partno', (r.partNumbers||[]).join(', '));
+  renderPartnoTags();
+  setV('db-remark',r.remark||''); setV('db-photo',r.photo||'');
+  // clients
+  document.getElementById('db-clients-wrap').innerHTML='';
+  (r.clients||[]).forEach(c=>addDbClientRow(c.name, c.contact, c.phone));
+  if(!r.clients||!r.clients.length) addDbClientRow();
+  if(r.photo){
+    document.getElementById('db-photo-thumb').src=r.photo;
+    document.getElementById('db-photo-up-wrap').style.display='none';
+    document.getElementById('db-photo-thumb-wrap').style.display='block';
+  }
+  document.getElementById('db-save-txt').textContent='수정 저장';
+  document.getElementById('dbf-panel').scrollIntoView({behavior:'smooth'});
+  toast(`수정 모드: ${r.name}`);
+}
+
+// ═══════════════════════════════════════════════════
+//  EXCEL 일괄 등록
+// ═══════════════════════════════════════════════════
+
+// DB 필드 정의: {key, label, required, aliases}
+const XL_FIELDS = [
+  { key:'dbId',         label:'DB 관리번호',   req:false,
+    aliases:['db관리번호','db관리번호','관리번호','dbid','db_id','db번호',
+              'dbmanageno','dbno','dbnumber','managementno','manageno'] },
+  { key:'name',         label:'품명',          req:true,
+    aliases:['품명','name','item','itemname','공구명','금형명','치구명','제품명'] },
+  { key:'category',     label:'카테고리',       req:true,
+    aliases:['카테고리','category','분류','대분류','type'] },
+  { key:'subCategory',  label:'세부분류',       req:false,
+    aliases:['세부분류','subcategory','세부','소분류','sub'] },
+  { key:'spec',         label:'규격/모델명',    req:false,
+    aliases:['규격','spec','model','모델','모델명','사이즈','size'] },
+  { key:'maker',        label:'제조사',         req:false,
+    aliases:['제조사','maker','manufacturer','메이커','제조','제조업체'] },
+  { key:'totalQty',     label:'총 수량',        req:false,
+    aliases:['수량','qty','quantity','총수량','보유수량','재고','재고수량','total'] },
+  { key:'qtyUnit',      label:'단위',           req:false,
+    aliases:['단위','unit','uom'] },
+  { key:'purchaseDate', label:'구입일',         req:false,
+    aliases:['구입일','purchasedate','구매일','취득일','purchase'] },
+  { key:'location',     label:'보관위치',       req:false,
+    aliases:['위치','location','보관','보관위치','창고','저장위치'] },
+  { key:'price',        label:'구입가격',       req:false,
+    aliases:['구입가격','price','가격','금액','구매가격','단가','구입금액'] },
+  { key:'priceUnit',    label:'단위(가격)',      req:false,
+    aliases:['단위가격','priceunit','통화','currency','화폐단위'] },
+  { key:'partNumbers',  label:'가공품 도번',    req:false,
+    aliases:['도번','partno','partnumber','part_number','가공품도번','도면번호','부품번호','공용품도번','공용도번'] },
+  { key:'remark',       label:'특이사항/메모',  req:false,
+    aliases:['특이사항','remark','메모','note','비고','memo','notes'] },
+  { key:'clientName',   label:'대출처(업체명)', req:false,
+    aliases:['대출처','업체명','거래처','client','company','borrower','업체'] },
+  { key:'clientContact',label:'담당자',         req:false,
+    aliases:['담당자','contact','담당','person','manager'] },
+  { key:'clientPhone',  label:'연락처',         req:false,
+    aliases:['연락처','phone','tel','전화','전화번호','휴대폰'] },
+];
+
+// 카테고리 정규화
+const CAT_MAP = {
+  '금형':     '금형류', '금형류':  '금형류', 'mold':    '금형류', 'die':    '금형류',
+  '치구':     '치구류', '치구류':  '치구류', 'jig':     '치구류', 'fixture':'치구류',
+  '공구':     '공구류', '공구류':  '공구류', 'tool':    '공구류', 'tools':  '공구류',
+  '기타':     '기타',   'etc':     '기타',   'other':   '기타',   'others': '기타',
+};
+
+let xlData = [];       // 파싱된 raw 행 배열
+let xlHeaders = [];    // 엑셀 헤더 목록
+let xlMapping = {};    // { dbFieldKey: excelColumnHeader }
+
+function handleXlUpload(e) {
+  var file = e.target.files[0];
+  if(!file) return;
+  e.target.value = '';
+  if(!window.XLSX) { toast('SheetJS 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요.', 'err'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var wb;
+      try {
+        wb = XLSX.read(ev.target.result, { type:'array', cellDates:false, raw:false });
+      } catch(readErr) {
+        toast('파일 읽기 실패: ' + readErr.message + ' (xlsx/xls/csv 형식만 지원)', 'err');
+        return;
+      }
+      var ws  = wb.Sheets[wb.SheetNames[0]];
+      // defval:'' 로 빈 셀 보존, blankrows:false 로 완전 빈 행만 제외
+      var raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', blankrows:false, raw:false });
+      if(!raw.length) { toast('시트가 비어 있습니다.', 'err'); return; }
+
+      // 헤더 행 자동 감지: 문자열이 가장 많은 첫 5행 중 선택
+      var hdrRow = 0;
+      var maxStr = 0;
+      for(var i=0; i<Math.min(5,raw.length); i++) {
+        var strCnt = raw[i].filter(function(v){
+          return typeof v==='string' && v.trim()!=='';
+        }).length;
+        if(strCnt > maxStr) { maxStr = strCnt; hdrRow = i; }
+      }
+      // 헤더가 없는 경우 0행 강제 사용
+      xlHeaders = raw[hdrRow].map(function(h){ return String(h).trim(); }).filter(Boolean);
+
+      // 데이터 행: 헤더 다음부터 끝까지 (완전 빈 행만 제외, 마지막 행 포함)
+      xlData = [];
+      for(var di = hdrRow + 1; di < raw.length; di++) {
+        var dataRow = raw[di];
+        var hasVal  = dataRow.some(function(cell){
+          return cell !== '' && cell !== null && cell !== undefined;
+        });
+        if(hasVal) xlData.push(dataRow);
+      }
+
+      document.getElementById('xl-filename').textContent = file.name;
+      document.getElementById('xl-fileinfo').textContent =
+        '시트: ' + wb.SheetNames[0] + ' | 헤더: ' + xlHeaders.length + '개 컬럼 | 데이터: ' + xlData.length + '행';
+
+      // 자동 매핑: 정확한 일치, 이미 매핑된 컬럼 재사용 방지
+      xlMapping = {};
+      var usedCols = {};
+      XL_FIELDS.forEach(function(f) {
+        function norm(s){ return s.toLowerCase().replace(/[\s_\-\(\)\.]/g,''); }
+        var match = null;
+        for(var hi=0; hi<xlHeaders.length; hi++) {
+          var h=xlHeaders[hi], hn=norm(h);
+          if(!usedCols[h] && f.aliases.some(function(a){ return hn===norm(a); })){
+            match=h; break;
+          }
+        }
+        if(match){ xlMapping[f.key]=match; usedCols[match]=true; }
+      });
+
+
+      renderXlMapping();
+      renderXlPreview();
+      document.getElementById('xl-step1').style.display = 'block';
+      document.getElementById('xl-step2').style.display = 'none';
+      document.getElementById('xl-footer').style.display = 'flex';
+      // ★ 버튼 텍스트/동작 항상 초기 상태로 세팅 (2번째 실행 시 null 방지)
+      var importBtnEl = document.getElementById('xl-import-btn');
+      if(importBtnEl) importBtnEl.onclick = function(){ runXlImport(); };
+      var importBtnTxt = document.getElementById('xl-import-btn-txt');
+      if(importBtnTxt) importBtnTxt.textContent = 'DB에 일괄 등록';
+      var footerEle = document.getElementById('xl-footer');
+      var cancelBtnEl = footerEle ? footerEle.querySelector('.btn.bo') : null;
+      if(cancelBtnEl) cancelBtnEl.textContent = '취소';
+      openM('m-xl');
+    } catch(err) {
+      toast('파일 읽기 실패: ' + err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderXlMapping() {
+  var tbody = document.getElementById('xl-map-tbody');
+  var html  = '';
+  XL_FIELDS.forEach(function(f) {
+    var selected = xlMapping[f.key] || '';
+    var sample   = selected ? getCellVal(xlData[0], xlHeaders.indexOf(selected)) : '—';
+    var opts     = '<option value="">( 매핑 안 함 )</option>';
+    xlHeaders.forEach(function(h) {
+      opts += '<option value="' + h + '"' + (h===selected?' selected':'') + '>' + h + '</option>';
+    });
+    var reqMark = f.req ? '<span style="color:var(--red)">* </span>' : '';
+    var color   = f.req ? 'var(--text1)' : 'var(--text2)';
+    html +=
+      '<tr style="border-bottom:1px solid var(--border);height:52px;">' +
+        '<td style="padding:10px 12px;color:' + color + ';white-space:nowrap;vertical-align:middle;">' + reqMark + f.label + '</td>' +
+        '<td style="padding:6px 8px;vertical-align:middle;">' +
+          '<select class="fs" style="height:38px;min-height:38px;font-size:12px;width:100%;display:block;padding:0 6px;box-sizing:border-box;" ' +
+            'onchange="xlMapping[\'' + f.key + '\']=this.value;renderXlPreview()">' +
+            opts +
+          '</select>' +
+        '</td>' +
+        '<td style="padding:8px 12px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;" id="xl-sample-' + f.key + '">' +
+          sample +
+        '</td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function getCellVal(row, colIdx) {
+  if(!row || colIdx < 0) return '';
+  var v = row[colIdx];
+  if(v === null || v === undefined || v === '') return '';
+  if(v instanceof Date) return v.toISOString().slice(0,10);
+  return String(v).trim();
+}
+
+function getMapped(row, key) {
+  var col = xlMapping[key];
+  if(!col) return '';
+  return getCellVal(row, xlHeaders.indexOf(col));
+}
+
+function renderXlPreview() {
+  XL_FIELDS.forEach(function(f) {
+    var el  = document.getElementById('xl-sample-' + f.key);
+    if(!el) return;
+    var col = xlMapping[f.key];
+    el.textContent = col && xlData[0] ? getCellVal(xlData[0], xlHeaders.indexOf(col)) : '—';
+  });
+
+  var table   = document.getElementById('xl-preview-table');
+  var mapped  = XL_FIELDS.filter(function(f){ return !!xlMapping[f.key]; });
+  var preview = xlData.slice(0, 5);
+  document.getElementById('xl-preview-count').textContent = '(총 ' + xlData.length + '행)';
+
+  var thHtml = mapped.map(function(f){
+    return '<th style="padding:6px 10px;text-align:left;color:var(--text3);white-space:nowrap;border-bottom:1px solid var(--border);">' + f.label + '</th>';
+  }).join('');
+
+  var tbHtml = preview.map(function(row, ri) {
+    var bg = ri%2 ? 'background:var(--bg3);' : '';
+    var tds = mapped.map(function(f){
+      return '<td style="padding:5px 10px;color:var(--text2);border-bottom:1px solid var(--border);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+        (getMapped(row,f.key)||'—') + '</td>';
+    }).join('');
+    return '<tr style="' + bg + '">' + tds + '</tr>';
+  }).join('');
+
+  table.innerHTML = '<thead><tr style="background:var(--bg3);position:sticky;top:0;">' + thHtml + '</tr></thead><tbody>' + tbHtml + '</tbody>';
+}
+
+function runXlImport() {
+  var missing = XL_FIELDS.filter(function(f){ return f.req && !xlMapping[f.key]; }).map(function(f){ return f.label; });
+  if(missing.length) { toast('필수 컬럼 매핑 필요: ' + missing.join(', '), 'err'); return; }
+
+  var cntAdded=0, cntExist=0, cntSkipped=0;
+  var skippedRows = [];
+
+  xlData.forEach(function(row, i) {
+    var name   = getMapped(row,'name');
+    var catRaw = getMapped(row,'category');
+    if(!name) { cntSkipped++; skippedRows.push({row:i+1, reason:'품명 없음'}); return; }
+
+    // 카테고리 정규화
+    var catKey   = catRaw.toLowerCase().replace(/[\s_\-]/g,'');
+    var category = CAT_MAP[catKey] || CAT_MAP[catRaw.trim()] || '기타';
+
+    // DB 관리번호: 엑셀 값 우선, 없으면 자동생성
+    var xlId = getMapped(row,'dbId').trim();
+    var n    = new Date();
+    var pfx  = 'DB-' + n.getFullYear() + String(n.getMonth()+1).padStart(2,'0');
+    var useId;
+    if(xlId) {
+      useId = xlId;
+    } else {
+      var existCnt = toolDb.filter(function(r){ return r.id.startsWith(pfx); }).length;
+      useId = pfx + '-' + String(existCnt + cntAdded + 1).padStart(3,'0');
+    }
+
+    // 중복 체크: DB 관리번호 기준
+    var dup = toolDb.find(function(r){ return r.id === useId; });
+    if(dup) {
+      cntExist++;
+      skippedRows.push({row:i+1, reason:'기존 등록 (' + useId + ')'});
+      return;
+    }
+
+    // 수량
+    var qtyRaw  = getMapped(row,'totalQty');
+    var totalQty = qtyRaw ? (parseInt(qtyRaw)||1) : 1;
+
+    // 날짜 (시리얼 숫자 → YYYY-MM-DD)
+    var pdate = getMapped(row,'purchaseDate');
+    if(pdate) {
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(pdate)) {
+        var num = parseFloat(pdate);
+        if(!isNaN(num) && num > 40000) {
+          var utc = new Date(Math.round((num - 25569) * 86400 * 1000));
+          pdate = utc.toISOString().slice(0,10);
+        } else {
+          var parsed = new Date(pdate);
+          pdate = isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0,10);
+        }
+      }
+    }
+
+    // 가공품 도번
+    var partRawXl   = getMapped(row,'partNumbers');
+    var partNumbers = partRawXl ? partRawXl.split(/[,;\n]+/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
+
+    // 대출처
+    var clientName    = getMapped(row,'clientName');
+    var clientContact = getMapped(row,'clientContact');
+    var clientPhone   = getMapped(row,'clientPhone');
+    var clients = clientName ? [{name:clientName, contact:clientContact||'', phone:clientPhone||''}] : [];
+
+    // 구입가격
+    var priceRaw  = getMapped(row,'price');
+    var priceVal  = priceRaw ? (parseFloat(String(priceRaw).replace(/[^0-9.]/g,''))||null) : null;
+    var priceUnit = getMapped(row,'priceUnit') || '원';
+
+    var spec = getMapped(row,'spec');
+
+    toolDb.push({
+      id:           useId,
+      name:         name,
+      category:     category,
+      subCategory:  getMapped(row,'subCategory') || '',
+      spec:         spec || '',
+      maker:        getMapped(row,'maker') || '',
+      purchaseDate: pdate || '',
+      price:        priceVal,
+      priceUnit:    priceUnit,
+      location:     getMapped(row,'location') || '',
+      totalQty:     totalQty,
+      qtyUnit:      getMapped(row,'qtyUnit') || 'EA',
+      clients:      clients,
+      remark:       getMapped(row,'remark') || '',
+      partNumbers:  partNumbers,
+      photo:        '',
+      createdAt:    new Date().toISOString()
+    });
+
+    if(clientName) upsertClientMaster(clientName, clientContact||'', clientPhone||'');
+    cntAdded++;
+  });
+
+  saveDb(); updateBadges(); renderDbList(); renderDbSearch();
+
+  // 결과 화면 전환
+  document.getElementById('xl-step1').style.display = 'none';
+  document.getElementById('xl-step2').style.display = 'block';
+
+  // ★ innerHTML 교체 금지 → xl-import-btn-txt span 보존
+  // 기존 [취소][DB에 일괄 등록] 버튼을 [닫기][DB 목록 확인]으로 텍스트/동작만 변경
+  var importBtn = document.getElementById('xl-import-btn');
+  if(importBtn) {
+    importBtn.onclick = function(){ closeXlModal(); switchTab('t-db'); };
+    var btnTxt = document.getElementById('xl-import-btn-txt');
+    if(btnTxt) btnTxt.textContent = 'DB 목록 확인';
+  }
+  // 취소 버튼 텍스트도 변경
+  var footerEl = document.getElementById('xl-footer');
+  var cancelBtn = footerEl ? footerEl.querySelector('.btn.bo') : null;
+  if(cancelBtn) cancelBtn.textContent = '닫기';
+
+  // 결과 카드 (신규/기존/미등록/전체)
+  var sumEl = document.getElementById('xl-result-summary');
+  sumEl.innerHTML =
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">' +
+      '<div style="flex:1;min-width:110px;background:var(--green-dim);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:14px 12px;text-align:center;">' +
+        '<div style="font-size:26px;font-weight:700;color:var(--green);">' + cntAdded + '</div>' +
+        '<div style="font-size:12px;color:var(--text2);margin-top:4px;">신규 등록</div>' +
+      '</div>' +
+      '<div style="flex:1;min-width:110px;background:var(--accent-dim);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:14px 12px;text-align:center;">' +
+        '<div style="font-size:26px;font-weight:700;color:var(--accent2);">' + cntExist + '</div>' +
+        '<div style="font-size:12px;color:var(--text2);margin-top:4px;">기존 입력</div>' +
+      '</div>' +
+      '<div style="flex:1;min-width:110px;background:var(--orange-dim);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:14px 12px;text-align:center;">' +
+        '<div style="font-size:26px;font-weight:700;color:var(--orange);">' + cntSkipped + '</div>' +
+        '<div style="font-size:12px;color:var(--text2);margin-top:4px;">오류/빈값</div>' +
+      '</div>' +
+      '<div style="flex:1;min-width:110px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 12px;text-align:center;">' +
+        '<div style="font-size:26px;font-weight:700;color:var(--text2);">' + xlData.length + '</div>' +
+        '<div style="font-size:12px;color:var(--text2);margin-top:4px;">전체 행</div>' +
+      '</div>' +
+    '</div>';
+
+  // 상세 목록
+  var listEl = document.getElementById('xl-result-list');
+  if(skippedRows.length) {
+    var listHtml = '<div style="padding:8px 14px;font-size:11px;font-weight:600;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border);">상세 내역</div>';
+    skippedRows.forEach(function(s){
+      var isExist = s.reason.indexOf('기존 등록') >= 0;
+      var color   = isExist ? 'var(--accent2)' : 'var(--orange)';
+      listHtml += '<div style="padding:7px 14px;font-size:12px;border-bottom:1px solid var(--border);color:var(--text2);">' +
+        '행 ' + s.row + ': <span style="color:' + color + ';">' + s.reason + '</span>' +
+        '</div>';
+    });
+    listEl.innerHTML = listHtml;
+  } else {
+    listEl.innerHTML = '<div style="padding:18px;text-align:center;color:var(--green);font-size:13px;">✓ 모든 행이 성공적으로 등록되었습니다.</div>';
+  }
+
+  toast('✓ 신규: ' + cntAdded + '건  /  기존: ' + cntExist + '건  /  미등록: ' + cntSkipped + '건  (전체: ' + xlData.length + '건)', cntAdded>0?'suc':'');
+}
+
+function closeXlModal() {
+  closeM('m-xl');
+  xlData=[]; xlHeaders=[]; xlMapping={};
+  // 버튼 텍스트·동작 원상 복구 (다음 실행을 위해)
+  var importBtn = document.getElementById('xl-import-btn');
+  if(importBtn) {
+    importBtn.onclick = function(){ runXlImport(); };
+    var btnTxt = document.getElementById('xl-import-btn-txt');
+    if(btnTxt) btnTxt.textContent = 'DB에 일괄 등록';
+  }
+  var footerEl  = document.getElementById('xl-footer');
+  var cancelBtn = footerEl ? footerEl.querySelector('.btn.bo') : null;
+  if(cancelBtn) cancelBtn.textContent = '취소';
+}
+
+
+// ═══════════════════════════════════════════════════
+//  공구 DB 엑셀 다운로드
+// ═══════════════════════════════════════════════════
+function exportDbXlsx() {
+  if(!toolDb.length){ toast('다운로드할 공구 데이터가 없습니다.','err'); return; }
+  if(!window.XLSX){ toast('SheetJS 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요.','err'); return; }
+
+  const today   = iso(new Date());
+  const company = document.getElementById('companyInput').value || '';
+  const wb      = XLSX.utils.book_new();
+
+  // ── 머리글 21개 ──────────────────────────────
+  const HEADERS = [
+    'No.',           // 1
+    'DB 관리번호',    // 2
+    '품명',           // 3
+    '카테고리',       // 4
+    '세부분류',       // 5
+    '규격/모델명',    // 6
+    '제조사',         // 7
+    '구입일',         // 8
+    '구입가격',       // 9
+    '단위(가격)',      // 10
+    '보관위치',       // 11
+    '총 보유수량',    // 12
+    '단위',           // 13
+    '현재 대출수량',  // 14
+    '현재 재고수량',  // 15
+    '대출처(업체명)', // 16
+    '담당자',         // 17
+    '연락처',         // 18
+    '가공품 도번',    // 19
+    '특이사항/메모',  // 20
+    '등록일'          // 21
+  ];
+
+  // ── 데이터 행 (머리글과 1:1 대응) ───────────
+  const rows = toolDb.map((r, i) => {
+    const lentQty = loans
+      .filter(l => l.dbRef === r.id && !l.returned)
+      .reduce((s, l) => s + (parseInt(l.qty) || 0), 0);
+    const total = parseInt(r.totalQty) || 0;
+    const avail = total - lentQty;
+    // 대출처는 clients 배열 전체를 세미콜론으로 구분
+    const clientNames    = (r.clients||[]).map(cl=>cl.name||'').filter(Boolean).join('; ');
+    const clientContacts = (r.clients||[]).map(cl=>cl.contact||'').filter(Boolean).join('; ');
+    const clientPhones   = (r.clients||[]).map(cl=>cl.phone||'').filter(Boolean).join('; ');
+    // 구입가격 표시
+    const priceStr = r.price != null ? formatPriceDisplay(r.price, r.priceUnit) : '';
+    return [
+      i + 1,                                    //  1. No.
+      r.id,                                     //  2. DB 관리번호
+      r.name,                                   //  3. 품명
+      r.category,                               //  4. 카테고리
+      r.subCategory || '',                      //  5. 세부분류
+      r.spec        || '',                      //  6. 규격/모델명
+      r.maker       || '',                      //  7. 제조사
+      r.purchaseDate|| '',                      //  8. 구입일
+      priceStr,                                 //  9. 구입가격
+      r.priceUnit   || '원',                    // 10. 단위(가격)
+      r.location    || '',                      // 11. 보관위치
+      total         || '',                      // 12. 총 보유수량
+      r.qtyUnit     || 'EA',                   // 13. 단위
+      lentQty       || 0,                       // 14. 현재 대출수량
+      total ? avail : '',                       // 15. 현재 재고수량
+      clientNames,                              // 16. 대출처(업체명) - 전체
+      clientContacts,                           // 17. 담당자 - 전체
+      clientPhones,                             // 18. 연락처 - 전체
+      (r.partNumbers||[]).join(', '),           // 19. 가공품 도번
+      r.remark      || '',                      // 20. 특이사항/메모
+      r.createdAt   ? r.createdAt.slice(0,10) : '' // 21. 등록일
+    ];
+  });
+
+  const sheetData = [
+    [ company ? company + ' 공구목록' : '공구목록' ],
+    [ '출력일: ' + today ],
+    [],
+    HEADERS,
+    ...rows
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+  // ── 열 너비 (21개, 머리글 순서와 동일) ───────
+  ws['!cols'] = [
+    {wch: 5},  //  1. No.
+    {wch:18},  //  2. DB 관리번호
+    {wch:22},  //  3. 품명
+    {wch:10},  //  4. 카테고리
+    {wch:12},  //  5. 세부분류
+    {wch:14},  //  6. 규격/모델명
+    {wch:14},  //  7. 제조사
+    {wch:12},  //  8. 구입일
+    {wch:16},  //  9. 구입가격
+    {wch: 8},  // 10. 단위(가격)
+    {wch:16},  // 11. 보관위치
+    {wch:12},  // 12. 총 보유수량
+    {wch: 6},  // 13. 단위
+    {wch:12},  // 14. 현재 대출수량
+    {wch:12},  // 15. 현재 재고수량
+    {wch:20},  // 16. 대출처(업체명)
+    {wch:12},  // 17. 담당자
+    {wch:14},  // 18. 연락처
+    {wch:28},  // 19. 가공품 도번
+    {wch:28},  // 20. 특이사항/메모
+    {wch:12},  // 21. 등록일
+  ];
+
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:HEADERS.length-1} }
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, '공구목록');
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob  = new Blob([wbout], {type:'application/octet-stream'});
+  triggerDownload(blob, '공구목록_' + today + '.xlsx');
+  toast('공구목록_' + today + '.xlsx 다운로드 완료 (' + toolDb.length + '건)', 'suc');
+}
+
+
+// ═══════════════════════════════════════════════════
+//  가공품 도번 태그 미리보기
+// ═══════════════════════════════════════════════════
+function renderPartnoTags() {
+  const raw = getV('db-partno');
+  const tags = raw ? raw.split(/[,\n;]+/).map(s=>s.trim()).filter(Boolean) : [];
+  const wrap = document.getElementById('db-partno-tags');
+  if(!wrap) return;
+  if(!tags.length) { wrap.innerHTML=''; return; }
+  wrap.innerHTML = tags.map(p=>
+    `<span class="partno-tag">${p}</span>`
+  ).join('');
+}
+
+
+// 가공품 도번 태그 HTML 생성 헬퍼 (백틱 중첩 회피)
+function partnoTagsFull(arr) {
+  if(!arr||!arr.length) return '';
+  return arr.map(function(p){ return '<span class="partno-tag">'+p+'</span>'; }).join('');
+}
+
+// 가공품 도번 인라인 태그 HTML 생성 (백틱 중첩 회피)
+function partnoInlineTags(arr, max) {
+  if(!arr||!arr.length) return '';
+  var shown = arr.slice(0, max);
+  var more  = arr.length > max ? arr.length - max : 0;
+  var html  = '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">';
+  shown.forEach(function(p){ html += '<span class="partno-inline">'+p+'</span>'; });
+  if(more) html += '<span class="partno-inline">+'+more+'</span>';
+  html += '</div>';
+  return html;
+}
+
+
+// ═══════════════════════════════════════════════════
+//  JSON 백업 / 복원
+// ═══════════════════════════════════════════════════
+
+// ── 내보내기 (백업) ──
+// ── 파일 다운로드 공통 헬퍼 ──
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+}
+
+
+async function exportJSON() {
+  try {
+    const company = document.getElementById('companyInput').value || '';
+    const backup = {
+      version:   'LoanMgr_v6',
+      exportedAt: new Date().toISOString(),
+      company,
+      loans:  loans,
+      toolDb: toolDb
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const date = iso(new Date());
+    triggerDownload(blob, '대출관리대장_백업_' + date + '.json');
+
+    const loansCnt  = loans.length;
+    const toolDbCnt = toolDb.length;
+    const sizeKB    = Math.round(json.length / 1024);
+    toast('백업 완료: 대출기록 ' + loansCnt + '건 · 공구DB ' + toolDbCnt + '건 (' + sizeKB + 'KB)', 'suc');
+  } catch(e) {
+    toast('백업 실패: ' + e.message, 'err');
+  }
+}
+
+// 복원 대기 데이터
+let _restoreData = null;
+
+// ── 불러오기 (복원) — 파일 선택 후 미리보기 ──
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  // input 초기화 (같은 파일 재선택 가능하도록)
+  e.target.value = '';
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+
+      // 기본 유효성 검사
+      if (!data.loans || !data.toolDb) {
+        toast('올바른 백업 파일이 아닙니다. (loans / toolDb 필드 없음)', 'err');
+        return;
+      }
+      if (!Array.isArray(data.loans) || !Array.isArray(data.toolDb)) {
+        toast('백업 파일 형식이 올바르지 않습니다.', 'err');
+        return;
+      }
+
+      _restoreData = data;
+
+      // 사진 포함 여부 확인
+      const photoCnt = data.toolDb.filter(r => r.photo && r.photo.length > 10).length;
+
+      // 현재 데이터 건수
+      const curLoans  = loans.length;
+      const curToolDb = toolDb.length;
+
+      // 복원 요약 표시
+      const exportDate = data.exportedAt
+        ? new Date(data.exportedAt).toLocaleString('ko-KR')
+        : '알 수 없음';
+      const fileSizeKB = Math.round(ev.target.result.length / 1024);
+
+      document.getElementById('restore-summary').innerHTML =
+        '<strong style="color:var(--accent2);">📋 백업 파일 정보</strong><br>' +
+        '파일 크기: ' + fileSizeKB + ' KB<br>' +
+        '백업 버전: ' + (data.version || '알 수 없음') + '<br>' +
+        '백업 일시: ' + exportDate + '<br>' +
+        '회사명: '   + (data.company || '(없음)') + '<br><br>' +
+        '<strong style="color:var(--green);">📦 복원될 데이터</strong><br>' +
+        '대출 기록: ' + data.loans.length + '건<br>' +
+        '공구 DB: '  + data.toolDb.length + '건<br>' +
+        '사진 포함: ' + photoCnt + '건 (원본 파일 불필요)<br><br>' +
+        '<strong style="color:var(--orange);">🗑 교체될 현재 데이터</strong><br>' +
+        '대출 기록: ' + curLoans  + '건<br>' +
+        '공구 DB: '  + curToolDb + '건';
+
+      openM('m-restore');
+    } catch(err) {
+      toast('파일 읽기 실패: ' + err.message + ' (올바른 JSON 파일인지 확인하세요)', 'err');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── 복원 실행 ──
+async function confirmRestore() {
+  if (!_restoreData) return;
+  try {
+    closeM('m-restore');
+
+    loans  = _restoreData.loans  || [];
+    toolDb = _restoreData.toolDb || [];
+    const company = _restoreData.company || '';
+
+    // IndexedDB에 저장
+    await Promise.all([saveLoans(), saveToolDb()]);
+
+    // 회사명 복원
+    if (company) {
+      document.getElementById('companyInput').value = company;
+      await saveCo(company);
+    }
+
+    // UI 갱신
+    updateBadges();
+    updateStats();
+    renderLed();
+    renderDbList();
+    renderDbSearch();
+    updateStorageStatus();
+    genId();
+
+    const loansCnt  = loans.length;
+    const toolDbCnt = toolDb.length;
+    toast('복원 완료! 대출기록 ' + loansCnt + '건 · 공구DB ' + toolDbCnt + '건', 'suc');
+    _restoreData = null;
+  } catch(e) {
+    toast('복원 실패: ' + e.message, 'err');
+  }
+}
+
+function clearRestoreData() {
+  _restoreData = null;
+}
+
+
+// ═══════════════════════════════════════════════════
+//  저장소 용량 모니터
+// ═══════════════════════════════════════════════════
+async function updateStorageStatus() {
+  const el = document.getElementById('idb-status');
+  if (!el) return;
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const est = await navigator.storage.estimate();
+      const used  = (est.usage  / 1024 / 1024).toFixed(1);
+      const total = est.quota
+        ? (est.quota / 1024 / 1024 / 1024).toFixed(1) + 'GB'
+        : '?';
+      const pct = est.quota ? Math.round(est.usage / est.quota * 100) : 0;
+      el.textContent = '💾 ' + used + 'MB / ' + total;
+      el.title = '사용: ' + used + 'MB (' + pct + '%)';
+      el.style.color = pct > 80 ? 'var(--red)' : pct > 50 ? 'var(--orange)' : 'var(--text3)';
+    } else {
+      // 지원 안 하면 레코드 수만 표시
+      el.textContent = '💾 DB ' + toolDb.length + '건 / 대출 ' + loans.length + '건';
+    }
+  } catch(e) {
+    el.textContent = '💾 IDB';
+  }
+}
+
+// IDB 전체 초기화 (개발/테스트용)
+async function clearAllData() {
+  if (!confirm('⚠️ 모든 데이터(공구DB + 대출기록)를 삭제합니다. 계속하시겠습니까?')) return;
+  try {
+    loans = []; toolDb = [];
+    await Promise.all([saveLoans(), saveToolDb()]);
+    updateBadges(); renderLed(); renderDbList(); renderDbSearch();
+    updateStorageStatus();
+    toast('전체 데이터가 삭제되었습니다.', 'err');
+  } catch(e) {
+    toast('삭제 실패: ' + e.message, 'err');
+  }
+}
+
+
+init();
+</script>
