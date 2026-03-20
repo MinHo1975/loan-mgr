@@ -2,10 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>대출품 관리대장 v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 :root{
   --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
   --border:#2e3a50;--border2:#3d4d65;
@@ -32,7 +34,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
 .date-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);padding:3px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;}
 
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;gap:4px;}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;gap:4px;position:sticky;top:56px;z-index:190;}
 .tab-btn{padding:12px 20px;border:none;background:transparent;color:var(--text3);font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap;}
 .tab-btn:hover{color:var(--text2);}
 .tab-btn.active{color:var(--accent2);}
@@ -123,8 +125,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 /* FILTER BAR */
 .fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
 .fbar .fi,.fbar .fs{height:34px;padding:0 10px;font-size:12px;}
-.fbar-date-row{display:flex;align-items:center;gap:4px;}
-.fbar-date-row .fi{width:130px;}
 .sw{position:relative;flex:1;min-width:180px;}
 .sw .fi{width:100%;padding-left:30px;}
 .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;width:14px;height:14px;}
@@ -279,266 +279,140 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr);}.fg{grid-template-columns:repeat(2,1fr);}.fg3{grid-column:span 2;}}
 @media(max-width:640px){.main{padding:12px;}.fg{grid-template-columns:1fr;}.fg2,.fg3{grid-column:span 1;}.cert-sg{grid-template-columns:1fr 1fr;}}
 
-/* ═══════════════════════════════════════
-   MOBILE RESPONSIVE STYLES
-═══════════════════════════════════════ */
+/* =====================================================
+   MOBILE STYLES (768px 이하)
+   iOS Safari 완전 호환 - cursor:pointer 전체 적용
+===================================================== */
 @media(max-width:768px){
+  /* iOS Safari: click 이벤트가 동작하려면 cursor:pointer 필수 */
+  *{cursor:pointer;-webkit-tap-highlight-color:rgba(59,130,246,0.15);}
+  input,textarea,select{cursor:text;}
 
-  /* HEADER */
-  .header{
-    padding:0 12px;
-    height:auto;
-    flex-wrap:wrap;
-    gap:8px;
-    padding-top:8px;
-    padding-bottom:8px;
-  }
-  .header-logo{font-size:13px;}
-  .header-logo img{width:28px!important;height:28px!important;}
+  /* 헤더 */
+  .header{height:auto;padding:8px 12px;flex-wrap:wrap;gap:6px;}
   .hd{display:none;}
-  .company-input{width:130px;font-size:12px;}
-  .header-right{gap:5px;flex-wrap:wrap;}
-  .header-right .btn{font-size:10px;padding:3px 7px;}
-  .date-badge{font-size:10px;padding:2px 6px;}
+  .company-input{width:120px;font-size:12px;}
+  .header-right{gap:4px;}
+  .header-right .btn{font-size:10px;padding:4px 8px;}
+  .date-badge{font-size:10px;padding:2px 5px;}
+  #idb-status{display:none;}
 
-  /* TABS — scrollable horizontal */
-  .tabs{
-    padding:0 8px;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-    gap:2px;
+  /* 탭바 → 하단 네비로 교체 */
+  .tabs{display:none;}
+
+  /* 하단 네비 */
+  #mob-nav{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    background:#161b27;border-top:1px solid #2e3a50;
+    z-index:999;padding:0 0 env(safe-area-inset-bottom,0);
   }
-  .tabs::-webkit-scrollbar{display:none;}
-  .tab-btn{padding:10px 12px;font-size:12px;white-space:nowrap;}
+  #mob-nav button{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:3px;
+    background:none;border:none;
+    color:#64748b;font-size:10px;font-family:'Noto Sans KR',sans-serif;
+    padding:10px 4px;
+    min-height:56px;
+    position:relative;
+  }
+  #mob-nav button.on{color:#60a5fa;}
+  #mob-nav button svg{width:22px;height:22px;display:block;}
+  #mob-nav .nb{
+    position:absolute;top:6px;right:calc(50% - 18px);
+    background:#3b82f6;color:#fff;
+    border-radius:8px;font-size:9px;font-weight:700;
+    min-width:14px;height:14px;padding:0 3px;
+    display:none;align-items:center;justify-content:center;
+  }
 
-  /* MAIN */
-  .main{padding:10px;}
+  /* 본문 */
+  .main{padding:10px;max-width:100%;}
+  body{padding-bottom:60px;}
 
-  /* STAT GRID */
-  .stat-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+  /* 통계 카드 */
+  .stat-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
   .stat-value{font-size:22px;}
   .stat-card{padding:12px 14px;}
 
-  /* SECTION HEADER */
-  .sh{padding:10px 12px;gap:7px;flex-wrap:wrap;}
-  .st{font-size:12px;}
-  .sh .btn{font-size:10px!important;padding:4px 8px!important;}
+  /* 섹션 */
+  .sh{padding:10px 12px;flex-wrap:wrap;gap:6px;}
   .sb{padding:12px;}
 
-  /* FORM — single column */
+  /* 폼 1컬럼 */
   .fg{grid-template-columns:1fr!important;}
   .fg2,.fg3{grid-column:span 1!important;}
 
-  /* FORM LAYOUT — 폼+사진 세로배치 */
-  .reg-layout{
-    grid-template-columns:1fr!important;
-  }
+  /* 등록탭 레이아웃: 폼+사진 세로 */
+  .reg-wrap{grid-template-columns:1fr!important;}
 
-  /* FILTER BAR */
-  .fbar{gap:6px;}
-  .fbar .fi,.fbar .fs{height:36px;font-size:12px;}
-  .sw{min-width:100%;flex:unset;}
-  .fbar-date-row{display:flex;align-items:center;gap:4px;width:100%;}
-  .fbar-date-row .fi{flex:1;min-width:0;}
-  .fbar .fbar-select{flex:1;width:auto!important;}
-  .fbar > .btn{width:100%;justify-content:center;}
+  /* 버튼 */
+  .btn{min-height:44px;padding:10px 14px;font-size:13px;}
+  .btn.btn-sm{min-height:38px;padding:7px 12px;font-size:12px;}
+  .btn.btn-xs{min-height:34px;padding:5px 9px;font-size:11px;}
+  .fa{flex-wrap:wrap;}
+  .fa .btn{flex:1;justify-content:center;}
 
-  /* TABLE — 카드형 변환 */
+  /* 필터바 */
+  .fbar{flex-direction:column;align-items:stretch;}
+  .fbar .fi,.fbar .fs{width:100%!important;height:40px;font-size:13px;}
+  .sw{min-width:100%;}
+  .sw .fi{width:100%;}
+  .fbar-dates{display:flex;gap:6px;}
+  .fbar-dates .fi{flex:1;}
+
+  /* 테이블 → 카드형 */
   .tw{overflow-x:visible;}
   .tw table thead{display:none;}
-  .tw table tbody tr{
-    display:block;
-    background:var(--bg2);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    margin-bottom:8px;
-    padding:10px 12px;
+  .tw table,
+  .tw tbody,
+  .tw tr,
+  .tw td{display:block;width:100%;}
+  .tw tr{
+    background:#1e2535;border:1px solid #2e3a50;
+    border-radius:10px;margin-bottom:10px;padding:10px 12px;
     position:relative;
   }
-  .tw table tbody tr:hover{background:var(--bg3);}
-  .tw table tbody tr.tr-returned{background:var(--green-dim);}
-  .tw table tbody tr.tr-overdue{border-left:3px solid var(--red);}
-  .tw table tbody tr.tr-perm{border-left:3px solid var(--purple);}
-  .tw table td{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:4px 0;
-    font-size:12px;
-    border-bottom:1px solid var(--border);
-    white-space:normal;
-    word-break:break-all;
+  .tw tr.tr-returned{background:rgba(34,197,94,.1);}
+  .tw tr.tr-overdue{border-left:3px solid #ef4444;}
+  .tw tr.tr-perm{border-left:3px solid #a855f7;}
+  .tw td{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:5px 0;border:none;
+    border-bottom:1px solid rgba(46,58,80,.6);
+    font-size:12px;white-space:normal;word-break:break-all;
   }
-  .tw table td:last-child{border-bottom:none;}
-  .tw table td::before{
+  .tw td:last-child{border-bottom:none;padding-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .tw td:last-child>div{display:flex;gap:6px;flex-wrap:wrap;}
+  .tw td:last-child>div .btn{flex:1;justify-content:center;}
+  .tw td::before{
     content:attr(data-label);
-    font-size:10px;
-    font-weight:600;
-    color:var(--text3);
-    text-transform:uppercase;
-    letter-spacing:.4px;
-    min-width:72px;
-    flex-shrink:0;
-    margin-right:8px;
+    font-size:10px;color:#64748b;
+    font-weight:600;text-transform:uppercase;
+    min-width:64px;flex-shrink:0;margin-right:8px;
   }
-  /* 액션 버튼 td는 전체 너비 */
-  .tw table td.td-action{
-    flex-direction:column;
-    align-items:stretch;
-    gap:6px;
-    padding-top:8px;
-  }
-  .tw table td.td-action::before{display:none;}
-  .tw table td.td-action > div{
-    display:flex;gap:6px;flex-wrap:wrap;
-  }
-  .tw table td.td-action .btn{flex:1;justify-content:center;font-size:11px;}
+  .tw td:last-child::before{display:none;}
 
-  /* MODAL */
-  .mo{padding:8px;}
-  .md{border-radius:10px;max-height:95vh;}
+  /* 페이지네이션 */
+  .pgn{flex-wrap:wrap;gap:4px;justify-content:center;}
+  .pb{min-width:36px;min-height:36px;}
+
+  /* DB 카드 */
+  .db-cards{grid-template-columns:1fr 1fr;gap:8px;}
+
+  /* 모달 */
+  .mo{padding:6px;}
+  .md{border-radius:12px;max-height:96vh;}
   .mb{padding:14px;}
   .mh{padding:12px 14px;}
-  .mf{padding:10px 14px;gap:6px;flex-wrap:wrap;}
-  .mf .btn{flex:1;justify-content:center;font-size:12px;}
-
-  /* FORM ACTIONS */
-  .fa{flex-wrap:wrap;gap:6px;}
-  .fa .btn{flex:1;justify-content:center;font-size:12px;}
-
-  /* DB CARDS */
-  .db-cards{grid-template-columns:repeat(2,1fr);gap:8px;}
-  .dc-img{height:100px;}
-  .dc-img img{height:100px;}
-  .dc-name{font-size:12px;}
-
-  /* DB CLIENT ROW */
-  .db-client-row{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;}
-  .db-client-row .client-del-btn{grid-column:span 2;width:100%;height:28px;border-radius:6px;}
-
-  /* PAGINATION */
-  .pgn{flex-wrap:wrap;gap:4px;}
-  .pb{min-width:28px;height:28px;font-size:11px;}
-  #pg-info{font-size:10px;}
-
-  /* CERT SIGNATURE GRID */
-  .cert-sg{grid-template-columns:1fr 1fr;}
-  .cert-ig{grid-template-columns:1fr;}
-  .cert-title{font-size:18px;letter-spacing:4px;}
-
-  /* TOAST */
-  .tc{bottom:16px;right:8px;left:8px;}
-  .toast{min-width:unset;width:100%;font-size:12px;}
-
-  /* DB DETAIL MODAL 버튼 */
-  #m-db-detail .mf{justify-content:stretch;}
-
-  /* DB SECTION HEADER 액션 그룹 */
-  .db-sh-actions{
-    width:100%;
-    margin-left:0!important;
-    justify-content:flex-start;
-  }
-  .db-sh-actions .btn{font-size:11px;padding:5px 9px;}
-  .db-search-wrap{flex:1;}
-  .db-search-wrap input{width:100%!important;}
-  #dbl-cat{flex:1;width:auto!important;}
-
-  /* 대출관리대장 탭 헤더 버튼 */
-  .led-sh-actions{
-    width:100%;
-    margin-left:0!important;
-    flex-wrap:wrap;
-  }
-  .led-sh-actions .btn{font-size:11px;flex:1;justify-content:center;}
-
-  /* 반납예정일 영구대출 체크박스 */
-  .cbrow{margin-top:2px;}
-
-  /* AUTOCOMPLETE DROPDOWN */
-  .ac-dropdown{max-height:180px;}
-
-  /* EXCEL 일괄등록 테이블 */
-  #m-xl .tw{overflow-x:auto;}
-  #m-xl table thead{display:table-header-group!important;}
-  #m-xl table tbody tr{display:table-row!important;background:unset!important;border:none!important;padding:0!important;}
-  #m-xl table td{display:table-cell!important;padding:6px 8px!important;border-bottom:1px solid var(--border)!important;white-space:nowrap!important;}
-  #m-xl table td::before{display:none!important;}
-
-  /* 대출증 테이블 모바일 */
-  .cert-table{font-size:10px;}
-  .cert-table th,.cert-table td{padding:4px 6px;}
-  .cert-ig{grid-template-columns:1fr 1fr;}
-  .cert-body{padding:12px 14px;}
-  .cert-hd{padding:12px 14px;}
-  .cert-title{font-size:16px;letter-spacing:3px;}
-
-  /* 공구 DB 검색 패널 */
-  #ds-panel{padding:10px;}
-  .db-results{max-height:220px;}
-  .dri{padding:8px 10px;gap:8px;}
-  .drt{width:36px;height:36px;}
-  .drt img{width:36px;height:36px;}
-
-  /* 엑셀 모달 */
-  #m-xl .md{max-width:100%!important;}
-
-  /* 복원 모달 */
-  #m-restore .md{max-width:100%!important;}
-
-  /* 백업/복원 요약 */
-  #restore-summary{font-size:12px;line-height:1.7;}
-
-  /* STORAGE STATUS */
-  #idb-status{display:none;}
+  .mf{padding:10px 14px;flex-wrap:wrap;gap:6px;}
+  .mf .btn{flex:1;justify-content:center;}
+  .mc{min-width:36px;min-height:36px;}
 }
 
-/* 초소형 화면 (360px 이하) */
 @media(max-width:400px){
   .stat-grid{grid-template-columns:1fr 1fr;}
-  .stat-value{font-size:18px;}
   .db-cards{grid-template-columns:1fr 1fr;}
-  .header-logo span{display:none;}
-  .company-input{width:110px;}
-}
-
-/* Bottom Navigation Bar (모바일 전용) */
-.mobile-nav{
-  display:none;
-  position:fixed;
-  bottom:0;left:0;right:0;
-  z-index:300;
-  background:var(--bg2);
-  border-top:1px solid var(--border);
-  padding:6px 0 env(safe-area-inset-bottom,6px);
-  justify-content:space-around;
-  align-items:center;
-}
-.mobile-nav-btn{
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  background:none;border:none;cursor:pointer;
-  color:var(--text3);font-size:10px;font-family:'Noto Sans KR',sans-serif;
-  padding:4px 12px;border-radius:8px;transition:color .2s;
-  position:relative;
-}
-.mobile-nav-btn.active{color:var(--accent2);}
-.mobile-nav-btn svg{width:20px;height:20px;}
-.mobile-nav-btn .mn-badge{
-  position:absolute;top:2px;right:8px;
-  min-width:16px;height:16px;
-  background:var(--accent);color:#fff;
-  border-radius:8px;font-size:9px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-  padding:0 4px;
-}
-
-@media(max-width:768px){
-  /* 탭바 숨기고 바텀 네비로 대체 */
-  .tabs{display:none;}
-  .mobile-nav{display:flex;}
-  /* 하단 네비 높이만큼 여백 */
-  body{padding-bottom:64px;}
 }
 </style>
 </head>
@@ -574,23 +448,24 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
   <button class="tab-btn" onclick="switchTab('t-db')">🗄️ 공구 DB <span class="tbadge" id="bdg-db">0</span></button>
 </div>
 
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mobile-nav">
-  <button class="mobile-nav-btn active" id="mn-reg" onclick="switchTab('t-reg')">
+<!-- 모바일 하단 네비 (기본 숨김, CSS로 768px 이하에서만 표시) -->
+<div id="mob-nav" style="display:none;">
+  <button id="mn0" onclick="mobTab(0)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-    대출등록
+    등록
+    <span class="nb" id="nb0"></span>
   </button>
-  <button class="mobile-nav-btn" id="mn-led" onclick="switchTab('t-led')">
+  <button id="mn1" onclick="mobTab(1)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
     관리대장
-    <span class="mn-badge" id="mn-bdg-led" style="display:none;">0</span>
+    <span class="nb" id="nb1"></span>
   </button>
-  <button class="mobile-nav-btn" id="mn-db" onclick="switchTab('t-db')">
+  <button id="mn2" onclick="mobTab(2)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
     공구DB
-    <span class="mn-badge" id="mn-bdg-db" style="display:none;">0</span>
+    <span class="nb" id="nb2"></span>
   </button>
-</nav>
+</div>
 
 <div class="main">
 
@@ -620,7 +495,7 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
   </div>
 
   <!-- 폼 + 사진 미리보기 -->
-  <div class="reg-layout" style="display:grid;grid-template-columns:1fr 176px;gap:14px;align-items:start;">
+  <div class="reg-wrap" style="display:grid;grid-template-columns:1fr 176px;gap:14px;align-items:start;">
     <div class="sc">
       <div class="sh">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -710,6 +585,17 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
             <div class="fl">대출목적</div>
             <input class="fi" id="f-purpose" placeholder="예: 시작품 제작, 품질검사용">
           </div>
+          <!-- 가공품 도번 목록 -->
+          <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
+            <div class="fl">가공품 도번 목록
+              <span style="font-size:10px;color:var(--text3);text-transform:none;font-weight:400;">(쉼표 또는 줄바꿈으로 구분 — DB 불러오기 시 자동입력)</span>
+            </div>
+            <textarea class="fta" id="f-partno"
+              placeholder="196621, 196630&#10;P-2241"
+              style="min-height:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;"
+              oninput="renderRegPartnoTags()"></textarea>
+            <div id="f-partno-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:0;"></div>
+          </div>
           <!-- 비고 -->
           <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
             <div class="fl">비고</div>
@@ -760,7 +646,7 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
     <div class="sh">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       <div class="st">대출관리대장</div>
-      <div class="led-sh-actions" style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <div style="margin-left:auto;display:flex;gap:8px;">
         <button class="btn bo btn-sm" onclick="openMultiCertModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>다중 대출증 출력
         </button>
@@ -782,11 +668,10 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
           <option value="">전체 상태</option><option value="active">대출중</option><option value="returned">반납완료</option>
           <option value="overdue">반납지연</option><option value="perm">영구대출</option>
         </select>
-        <div class="fbar-date-row">
-          <input type="date" class="fi" id="l-df" onchange="renderLed()">
-          <span style="color:var(--text3);font-size:12px;flex-shrink:0;">~</span>
-          <input type="date" class="fi" id="l-dt" onchange="renderLed()">
-        </div>
+        <div class="fbar-dates"><input type="date" class="fi" id="l-df" onchange="renderLed()"><span style="color:var(--text3);font-size:12px;flex-shrink:0;">~</span><input type="date" class="fi" id="l-dt" onchange="renderLed()"></div>
+
+
+
         <button class="btn bo btn-sm" onclick="clearLedFilter()">초기화</button>
       </div>
       <div class="tw">
@@ -971,7 +856,7 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
       <div class="st">등록된 공구 목록</div>
       <span class="tbadge" id="db-cnt">0</span>
-      <div class="db-sh-actions" style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
         <button class="btn bo btn-sm" onclick="exportDbXlsx()" title="공구 DB 전체를 엑셀로 다운로드">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           엑셀 다운로드
@@ -981,7 +866,7 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
           엑셀 일괄 등록
           <input type="file" id="xl-upload" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleXlUpload(event)">
         </label>
-        <div class="db-search-wrap" style="position:relative;">
+        <div style="position:relative;">
           <svg style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text3);width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input class="fi" id="dbl-q" placeholder="검색..." style="padding-left:26px;height:31px;font-size:11px;width:180px;" oninput="renderDbList()">
         </div>
@@ -1413,11 +1298,6 @@ function updateBadges() {
   document.getElementById('bdg-led').textContent = loans.length;
   document.getElementById('bdg-db').textContent  = toolDb.length;
   document.getElementById('db-cnt').textContent  = toolDb.length;
-  // 모바일 바텀 네비 배지 업데이트
-  const mnLed=document.getElementById('mn-bdg-led');
-  const mnDb=document.getElementById('mn-bdg-db');
-  if(mnLed){mnLed.textContent=loans.length;mnLed.style.display=loans.length>0?'flex':'none';}
-  if(mnDb){mnDb.textContent=toolDb.length;mnDb.style.display=toolDb.length>0?'flex':'none';}
 }
 
 function dday(due, returned, perm) {
@@ -1704,13 +1584,6 @@ function switchTab(id) {
   document.getElementById(id).classList.add('active');
   const idx=['t-reg','t-led','t-db'].indexOf(id);
   document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-  // 모바일 바텀 네비 동기화
-  const mnMap={'t-reg':'mn-reg','t-led':'mn-led','t-db':'mn-db'};
-  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
-  const mnEl=document.getElementById(mnMap[id]);
-  if(mnEl)mnEl.classList.add('active');
-  // 모바일에서 탭 전환 시 상단으로 스크롤
-  if(window.innerWidth<=768)window.scrollTo({top:0,behavior:'smooth'});
   if(id==='t-led'){updateStats();renderLed();}
   if(id==='t-db'){renderDbList();}
 }
@@ -1945,6 +1818,9 @@ function loadFromDb(dbId) {
   // ★ DB 관리번호를 대출품 등록 관리번호로 사용
   setV('f-id', r.id);
   document.getElementById('f-id').dataset.dbRef = r.id;
+  // 가공품 도번 자동입력
+  setV('f-partno', (r.partNumbers||[]).join(', '));
+  renderRegPartnoTags();
   // 수량 힌트 갱신
   checkQtyLimit();
   // photo preview
@@ -1982,6 +1858,7 @@ function getFormData() {
     permanent: perm,
     purpose: getV('f-purpose').trim(),
     remark: getV('f-remark').trim(),
+    partNumbers: getV('f-partno').split(/[,\n;]+/).map(s=>s.trim()).filter(Boolean),
     returned: false, returnDate: null, printedAt: null,
     createdAt: new Date().toISOString()
   };
@@ -2024,7 +1901,8 @@ function saveRecord(doPrint) {
 function saveAndPrint(){saveRecord(true);}
 
 function resetRegForm() {
-  ['f-name','f-spec','f-borrower','f-contact','f-phone','f-purpose','f-remark'].forEach(id=>setV(id,''));
+  ['f-name','f-spec','f-borrower','f-contact','f-phone','f-purpose','f-remark','f-partno'].forEach(id=>setV(id,''));
+  document.getElementById('f-partno-tags').innerHTML='';
   setV('f-cat',''); setV('f-qty','1'); setV('f-unit','EA');
   document.getElementById('f-perm').checked=false;
   document.getElementById('f-due').disabled=false;
@@ -2041,26 +1919,38 @@ function resetRegForm() {
 //  CERT BUILD
 // ═══════════════════════════════════════════════════
 function buildCert(recs, co) {
-  // recs: array of loan records (single or multi)
   const r0=recs[0];
   const retStr = recs.map(r=>r.permanent?'영구대출':fmt(r.returnDueDate));
   const dueDisplay = [...new Set(retStr)].join(', ');
 
-  const rows = recs.map((r,i)=>`<tr>
+  const rows = recs.map((r,i)=>{
+    const pnArr = r.partNumbers||[];
+    // 관리번호 한 번 : 도번1, 도번2, ...
+    const pnCells = pnArr.length
+      ? `<span style="font-family:monospace;font-size:10px;color:#0369a1;font-weight:600;">${r.id}</span>`
+        + `<span style="color:#94a3b8;margin:0 5px;">:</span>`
+        + pnArr.map(p=>`<span style="display:inline-block;background:#e0f2fe;color:#0369a1;border-radius:3px;padding:1px 6px;margin:1px 2px;font-family:monospace;font-size:10px;">${p}</span>`).join('<span style="color:#94a3b8;margin:0 1px;">,</span>')
+      : `<span style="font-family:monospace;font-size:10px;color:#64748b;">${r.id}</span>`;
+    const pnRow = `<tr style="background:#f8fafc;">
+      <td style="border:1px solid #dde3ea;padding:3px 8px;"></td>
+      <td colspan="8" style="border:1px solid #dde3ea;text-align:left;padding:4px 8px;font-size:10px;color:#475569;">
+        📎 ${pnCells}
+      </td>
+    </tr>`;
+    return `<tr>
     <td>${i+1}</td>
     <td style="text-align:left;font-weight:600">${r.itemName}</td>
     <td>${r.category}</td><td>${r.subCategory||'-'}</td>
     <td>${r.spec||'-'}</td><td>${r.qty}</td><td>${r.unit}</td>
     <td>${r.permanent?'♾ 영구':''}${r.returnDueDate!=='영구대출'?fmt(r.returnDueDate):''}</td>
     <td style="text-align:left">${r.remark||''}</td>
-  </tr>`).join('');
+  </tr>${pnRow}`;
+  }).join('');
 
   const purposes=[...new Set(recs.map(r=>r.purpose).filter(Boolean))].join(' / ');
-  const ids=recs.map(r=>r.id).join(', ');
 
   return `<div class="cert-hd"><div class="cert-co">${co}</div><div class="cert-title">대 출 증</div></div>
   <div class="cert-body">
-    <div class="cert-no">관리번호: ${ids}</div>
     <div class="cert-ig">
       <div class="cert-ic"><div class="cert-il">대출처</div><div class="cert-iv">${r0.borrower||'-'}</div></div>
       <div class="cert-ic"><div class="cert-il">담당자</div><div class="cert-iv">${r0.contact||'-'} ${r0.phone?'/ '+r0.phone:''}</div></div>
@@ -2226,7 +2116,7 @@ function renderLed(){
         <td data-label="D-Day" style="text-align:center">${ddHtml}</td>
         <td data-label="반납여부" style="text-align:center">${r.returned?'<span class="reto">O</span>':'<span style="color:var(--text3)">—</span>'}</td>
         <td data-label="반납일" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${r.returnDate||'-'}</td>
-        <td class="td-action">
+        <td>
           <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap">
             <button class="btn bo btn-xs" onclick="viewCert('${r.id}')">대출증</button>
             ${r.returned
@@ -2326,8 +2216,16 @@ function confirmDelete(){
 // ═══════════════════════════════════════════════════
 function exportCSV(){
   if(!loans.length){toast('데이터 없음','err');return;}
-  const h=['관리번호','대출품명','카테고리','세부분류','규격','수량','단위','대출처','담당자','연락처','대출일','반납예정일','영구대출','반납여부','반납일','대출목적','비고'];
-  const rows=loans.map(r=>[r.id,r.itemName,r.category,r.subCategory||'',r.spec||'',r.qty,r.unit,r.borrower,r.contact||'',r.phone||'',r.loanDate,r.permanent?'영구대출':r.returnDueDate,r.permanent?'O':'',r.returned?'O':'',r.returnDate||'',r.purpose||'',r.remark||'']);
+  const h=['관리번호','대출품명','카테고리','세부분류','규격','수량','단위','대출처','담당자','연락처','대출일','반납예정일','영구대출','반납여부','반납일','대출목적','가공품도번','비고'];
+  const rows=loans.map(r=>[
+    r.id, r.itemName, r.category, r.subCategory||'', r.spec||'',
+    r.qty, r.unit, r.borrower, r.contact||'', r.phone||'',
+    r.loanDate, r.permanent?'영구대출':r.returnDueDate,
+    r.permanent?'O':'', r.returned?'O':'', r.returnDate||'',
+    r.purpose||'',
+    (r.partNumbers&&r.partNumbers.length ? r.id+' : '+(r.partNumbers.join(', ')) : r.id),
+    r.remark||''
+  ]);
   const csv=[h,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download='대출관리대장_'+iso(new Date())+'.csv';
@@ -3136,6 +3034,18 @@ function renderPartnoTags() {
   ).join('');
 }
 
+// 대출품 등록폼 가공품 도번 태그 렌더링
+function renderRegPartnoTags() {
+  const raw = getV('f-partno');
+  const tags = raw ? raw.split(/[,\n;]+/).map(s=>s.trim()).filter(Boolean) : [];
+  const wrap = document.getElementById('f-partno-tags');
+  if(!wrap) return;
+  if(!tags.length) { wrap.innerHTML=''; return; }
+  wrap.innerHTML = tags.map(p=>
+    '<span class="partno-tag">'+p+'</span>'
+  ).join('');
+}
+
 
 // 가공품 도번 태그 HTML 생성 헬퍼 (백틱 중첩 회피)
 function partnoTagsFull(arr) {
@@ -3344,4 +3254,50 @@ async function clearAllData() {
 
 
 init();
+</script>
+
+<!-- =============================================
+     모바일 전용 JS (원본 코드 무수정)
+============================================= -->
+<script>
+(function(){
+  var TABS = ['t-reg','t-led','t-db'];
+
+  window.mobTab = function(idx){
+    switchTab(TABS[idx]);
+    for(var i=0;i<3;i++){
+      var b=document.getElementById('mn'+i);
+      if(b) b.className=(i===idx)?'on':'';
+    }
+    window.scrollTo(0,0);
+  };
+
+  /* switchTab 감싸서 모바일 네비 동기화 */
+  var _orig = window.switchTab;
+  window.switchTab = function(id){
+    _orig(id);
+    var idx=TABS.indexOf(id);
+    for(var i=0;i<3;i++){
+      var b=document.getElementById('mn'+i);
+      if(b) b.className=(i===idx)?'on':'';
+    }
+  };
+
+  /* updateBadges 감싸서 모바일 배지 동기화 */
+  var _origBadge = window.updateBadges;
+  window.updateBadges = function(){
+    _origBadge();
+    var lc=(window.loans||[]).length;
+    var dc=(window.toolDb||[]).length;
+    var nb1=document.getElementById('nb1');
+    var nb2=document.getElementById('nb2');
+    if(nb1){nb1.textContent=lc;nb1.style.display=lc>0?'flex':'none';}
+    if(nb2){nb2.textContent=dc;nb2.style.display=dc>0?'flex':'none';}
+  };
+
+  window.addEventListener('load',function(){
+    var b=document.getElementById('mn0');
+    if(b) b.className='on';
+  });
+})();
 </script>
