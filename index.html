@@ -21,6 +21,11 @@
   --radius:10px;--shadow:0 4px 24px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+/* iOS Safari 필수: cursor:pointer 없으면 click 이벤트 무시됨 */
+*{-webkit-tap-highlight-color:rgba(59,130,246,0.15);}
+body,button,a,label,[onclick]{cursor:pointer;}
+input,textarea,select{cursor:text;}
+button{-webkit-appearance:none;appearance:none;touch-action:manipulation;}
 html{font-size:14px;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;}
 
@@ -211,7 +216,7 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
 .db-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
 .db-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column;}
 .db-card:hover{border-color:var(--border2);}
-.dc-img{width:100%;height:130px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:30px;overflow:hidden;}
+.dc-img{width:100%;height:130px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:30px;overflow:hidden;position:relative;}
 .dc-img img{width:100%;height:130px;object-fit:cover;}
 .dc-body{padding:10px 12px 8px;flex:1;display:flex;flex-direction:column;}
 .dc-id{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;}
@@ -449,6 +454,9 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
 </div>
 
 <!-- 모바일 하단 네비 (기본 숨김, CSS로 768px 이하에서만 표시) -->
+<!-- 다중 사진 업로드용 hidden input -->
+<input type="file" id="db-photo-add" accept="image/*" multiple style="display:none;" onchange="handlePhotoAdd(event)">
+
 <div id="mob-nav" style="display:none;">
   <button id="mn0" onclick="mobTab(0)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -623,8 +631,14 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
         <div class="st" style="font-size:11px;">DB 품목 사진</div>
       </div>
       <div style="padding:11px;">
-        <div class="photo-prev" id="reg-photo-prev">
-          <div class="noph">DB에서 품목을<br>불러오면 표시됩니다</div>
+        <div id="reg-photo-prev" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div class="noph" style="color:var(--text3);font-size:11px;text-align:center;padding:16px 0;">DB에서 품목을<br>불러오면 표시됩니다</div>
+        </div>
+        <!-- 슬라이드 컨트롤 (사진 2장 이상일 때만 표시) -->
+        <div id="reg-photo-nav" style="display:none;margin-top:6px;display:none;align-items:center;justify-content:center;gap:8px;">
+          <button onclick="regPhotoSlide(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:3px 9px;cursor:pointer;font-size:13px;">‹</button>
+          <span id="reg-photo-indicator" style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;"></span>
+          <button onclick="regPhotoSlide(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:3px 9px;cursor:pointer;font-size:13px;">›</button>
         </div>
         <div style="margin-top:7px;font-size:10px;color:var(--text3);text-align:center;" id="reg-photo-name">—</div>
       </div>
@@ -820,24 +834,10 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
           <textarea class="fta" id="db-remark" placeholder="사용 주의사항, 특이사항 등"></textarea>
         </div>
         <!-- 사진 -->
-        <div style="display:flex;flex-direction:column;gap:5px;" class="fg3">
-          <div class="fl">사진 등록</div>
-          <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
-            <div id="db-photo-up-wrap">
-              <div class="pup" onclick="document.getElementById('db-photo-file').click()">
-                <input type="file" id="db-photo-file" accept="image/*" onchange="handlePhoto(event)" style="display:none">
-                <div class="pup-icon">📷</div>
-                <div class="pup-text">클릭하여 사진 선택<br>(JPG, PNG, GIF)</div>
-              </div>
-            </div>
-            <div id="db-photo-thumb-wrap" style="display:none;">
-              <div class="pthw">
-                <img id="db-photo-thumb" class="pth" src="" alt="">
-                <button class="pthr" onclick="removePhoto()" title="삭제">✕</button>
-              </div>
-            </div>
-          </div>
-          <input type="hidden" id="db-photo">
+        <div style="display:flex;flex-direction:column;gap:8px;" class="fg3">
+          <div class="fl">사진 등록 <span style="font-size:10px;color:var(--text3);text-transform:none;font-weight:400;">(최대 5장 / 클릭하여 추가)</span></div>
+          <div id="db-photos-grid" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;"></div>
+          <input type="hidden" id="db-photo"><!-- 하위호환용 -->
         </div>
       </div>
       <div class="fa">
@@ -1253,6 +1253,7 @@ async function init() {
   await loadClientMaster();
   updateBadges(); renderLed(); renderDbList(); renderDbSearch();
   addDbClientRow();
+  initPhotosGrid([]); // 사진 그리드 초기 렌더링
   document.addEventListener('click', e=>{
     document.querySelectorAll('.ac-dropdown.open').forEach(el=>{
       if(!el.parentElement.contains(e.target)) el.classList.remove('open');
@@ -1770,7 +1771,8 @@ function renderDbSearch() {
     var dri_fn   = noStock ? "showInUseFromDb('" + r.id + "')" : "loadFromDb('" + r.id + "')";
     var dri_btn  = noStock ? 'bd' : 'bp';
     var dri_txt  = noStock ? '재고없음' : '불러오기';
-    var dri_photo = r.photo ? '<img src="' + r.photo + '" alt="">' : '📦';
+    var firstPhoto = (r.photos&&r.photos.length) ? r.photos[0] : (r.photo||'');
+    var dri_photo = firstPhoto ? '<img src="' + firstPhoto + '" alt="">' : '📦';
     var dri_stock = hasQtyInfo ? '<span class="stock-badge ' + stockCls + '" style="margin-left:6px;">재고 ' + avail + '/' + total + (r.qtyUnit||'EA') + '</span>' : '';
     var dri_remark = r.remark ? '<div style="font-size:10px;color:var(--text3)">' + r.remark.slice(0,50) + (r.remark.length>50?'…':'') + '</div>' : '';
     var dri_sub  = r.id + ' · ' + r.category + (r.subCategory?' / '+r.subCategory:'') + (r.spec?' · '+r.spec:'');
@@ -1825,8 +1827,16 @@ function loadFromDb(dbId) {
   checkQtyLimit();
   // photo preview
   const pp=document.getElementById('reg-photo-prev');
-  if(r.photo) pp.innerHTML='<img src="'+r.photo+'" alt="'+r.name+'" style="width:100%;border-radius:6px;">';
-  else pp.innerHTML='<div class="noph">등록된 사진이<br>없습니다</div>';
+  const allPhotos = (r.photos&&r.photos.length) ? r.photos : (r.photo ? [r.photo] : []);
+  if(allPhotos.length) {
+    _regPhotos = allPhotos;
+    _regPhotoIdx = 0;
+    renderRegPhotoSlide();
+  } else {
+    _regPhotos = [];
+    pp.innerHTML='<div style="color:var(--text3);font-size:11px;text-align:center;padding:16px 0;">등록된 사진이<br>없습니다</div>';
+    document.getElementById('reg-photo-nav').style.display='none';
+  }
   document.getElementById('reg-photo-name').textContent=r.name;
   document.getElementById('reg-db-badge').style.display='inline-flex';
   toast('불러옴: '+r.name+' (관리번호: '+r.id+')', 'suc');
@@ -1911,7 +1921,9 @@ function resetRegForm() {
   updateSubCat('f-cat','f-sub'); genId();
   document.getElementById('f-id').dataset.dbRef='';
   document.getElementById('reg-db-badge').style.display='none';
-  document.getElementById('reg-photo-prev').innerHTML='<div class="noph">DB에서 품목을<br>불러오면 표시됩니다</div>';
+  document.getElementById('reg-photo-prev').innerHTML='<div style="color:var(--text3);font-size:11px;text-align:center;padding:16px 0;">DB에서 품목을<br>불러오면 표시됩니다</div>';
+  document.getElementById('reg-photo-nav').style.display='none';
+  _regPhotos=[]; _regPhotoIdx=0;
   document.getElementById('reg-photo-name').textContent='—';
 }
 
@@ -2241,23 +2253,102 @@ function toggleDbForm(){
   document.getElementById('dbf-toggle').textContent=dbFormOpen?'▲ 폼 닫기':'▼ 폼 열기';
   if(dbFormOpen&&!getV('db-id'))genDbId();
 }
-async function handlePhoto(e){
-  const file=e.target.files[0]; if(!file) return;
-  // 최대 800×800px, JPEG 품질 0.75 로 압축 (원본 대비 약 5~15배 용량 절감)
-  const data = await compressImage(file, 800, 800, 0.75);
-  const origKB  = Math.round(file.size / 1024);
-  const compKB  = Math.round(data.length * 0.75 / 1024);
-  setV('db-photo', data);
-  document.getElementById('db-photo-thumb').src = data;
-  document.getElementById('db-photo-up-wrap').style.display  = 'none';
-  document.getElementById('db-photo-thumb-wrap').style.display = 'block';
-  toast('사진 압축 완료: ' + origKB + 'KB → ' + compKB + 'KB', 'suc');
+// ═══════════════════════════════════════════════════
+//  사진 관리 (최대 5장)
+// ═══════════════════════════════════════════════════
+var _photos = []; // DB폼 사진 배열
+var MAX_PHOTOS = 5;
+
+// 대출품 등록탭 사진 슬라이드
+var _regPhotos = [];
+var _regPhotoIdx = 0;
+
+function renderRegPhotoSlide() {
+  var pp = document.getElementById('reg-photo-prev');
+  var nav = document.getElementById('reg-photo-nav');
+  var ind = document.getElementById('reg-photo-indicator');
+  if(!pp || !_regPhotos.length) return;
+  pp.innerHTML = '<img src="'+_regPhotos[_regPhotoIdx]+'" alt="사진" style="width:100%;max-height:150px;object-fit:contain;border-radius:6px;">';
+  if(_regPhotos.length > 1) {
+    nav.style.display = 'flex';
+    ind.textContent = (_regPhotoIdx+1) + ' / ' + _regPhotos.length;
+  } else {
+    nav.style.display = 'none';
+  }
 }
-function removePhoto(){
-  setV('db-photo',''); setV('db-photo-file','');
-  document.getElementById('db-photo-thumb').src='';
-  document.getElementById('db-photo-up-wrap').style.display='block';
-  document.getElementById('db-photo-thumb-wrap').style.display='none';
+
+function regPhotoSlide(dir) {
+  if(!_regPhotos.length) return;
+  _regPhotoIdx = (_regPhotoIdx + dir + _regPhotos.length) % _regPhotos.length;
+  renderRegPhotoSlide();
+}
+
+function renderPhotosGrid() {
+  var grid = document.getElementById('db-photos-grid');
+  if (!grid) return;
+  var html = '';
+  // 등록된 사진 썸네일
+  _photos.forEach(function(src, idx) {
+    html += '<div class="pthw" style="position:relative;display:inline-block;">'
+      + '<img src="' + src + '" class="pth" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">'
+      + '<button class="pthr" onclick="removePhotoAt(' + idx + ')" title="삭제" style="position:absolute;top:-6px;right:-6px;">✕</button>'
+      + '</div>';
+  });
+  // 추가 버튼 (5장 미만일 때만)
+  if (_photos.length < MAX_PHOTOS) {
+    html += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;'
+      + 'width:100px;height:100px;border:2px dashed var(--border2);border-radius:8px;cursor:pointer;'
+      + 'font-size:11px;color:var(--text3);gap:4px;transition:border-color .2s;" '
+      + 'onclick="document.getElementById(\'db-photo-add\').click()" '
+      + 'onmouseover="this.style.borderColor=\'var(--accent)\'" '
+      + 'onmouseout="this.style.borderColor=\'var(--border2)\'">'
+      + '<span style="font-size:24px;">📷</span>'
+      + '<span>' + (_photos.length === 0 ? '사진 추가' : '추가 (' + _photos.length + '/' + MAX_PHOTOS + ')') + '</span>'
+      + '</div>';
+  }
+  grid.innerHTML = html;
+  // 하위호환: 첫 번째 사진을 db-photo에도 저장
+  setV('db-photo', _photos.length ? _photos[0] : '');
+}
+
+function removePhotoAt(idx) {
+  _photos.splice(idx, 1);
+  renderPhotosGrid();
+}
+
+// 하위호환용 (단일 사진 제거)
+function removePhoto() { removePhotoAt(0); }
+
+async function handlePhotoAdd(e) {
+  var files = Array.from(e.target.files);
+  e.target.value = '';
+  var remain = MAX_PHOTOS - _photos.length;
+  if (remain <= 0) { toast('사진은 최대 ' + MAX_PHOTOS + '장까지 등록 가능합니다.', 'err'); return; }
+  files = files.slice(0, remain);
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var data = await compressImage(file, 800, 800, 0.75);
+    var origKB = Math.round(file.size / 1024);
+    var compKB = Math.round(data.length * 0.75 / 1024);
+    _photos.push(data);
+    toast('사진 ' + _photos.length + '장: ' + origKB + 'KB → ' + compKB + 'KB', 'suc');
+  }
+  renderPhotosGrid();
+}
+
+// 하위호환용 단일 핸들러
+async function handlePhoto(e) { await handlePhotoAdd(e); }
+
+function initPhotosGrid(photosArr) {
+  // photosArr: 배열 또는 단일 base64 문자열 (하위호환)
+  if (Array.isArray(photosArr)) {
+    _photos = photosArr.filter(Boolean);
+  } else if (photosArr) {
+    _photos = [photosArr];
+  } else {
+    _photos = [];
+  }
+  renderPhotosGrid();
 }
 function getDbData(){
   // clients 수집
@@ -2289,7 +2380,8 @@ function getDbData(){
     clients,
     partNumbers,
     remark:getV('db-remark').trim(),
-    photo:getV('db-photo'),
+    photos: _photos.slice(), // 다중 사진 배열
+    photo: _photos.length ? _photos[0] : '', // 하위호환
     createdAt:new Date().toISOString()
   };
 }
@@ -2326,11 +2418,9 @@ function resetDbForm(){
   ['db-id','db-name','db-spec','db-maker','db-loc','db-remark','db-partno','db-price','dbe-id'].forEach(id=>setV(id,''));
   setV('db-price-unit','원');
   document.getElementById('db-partno-tags').innerHTML='';
-  setV('db-cat',''); setV('db-pdate',''); setV('db-photo',''); setV('db-photo-file','');
+  setV('db-cat',''); setV('db-pdate',''); setV('db-photo','');
   setV('db-total-qty','1'); setV('db-qty-unit','EA');
-  document.getElementById('db-photo-thumb').src='';
-  document.getElementById('db-photo-up-wrap').style.display='block';
-  document.getElementById('db-photo-thumb-wrap').style.display='none';
+  initPhotosGrid([]); // 사진 그리드 초기화
   document.getElementById('db-save-txt').textContent='DB에 저장';
   document.getElementById('db-clients-wrap').innerHTML='';
   addDbClientRow(); // 기본 1행
@@ -2362,7 +2452,7 @@ function renderDbList(){
     const noStock = hasQtyInfo && avail <= 0;
     const stockCls = !hasQtyInfo ? 'stock-ok' : avail<=0 ? 'stock-err' : avail<=(total/2) ? 'stock-warn' : 'stock-ok';
     return`<div class="db-card" style="${noStock?'border-color:var(--red);':inUse?'border-color:var(--orange);':''}" onclick="openDbDetail('${r.id}')">
-      <div class="dc-img">${r.photo?`<img src="${r.photo}" alt="">`:'📦'}</div>
+      <div class="dc-img">${(r.photos&&r.photos[0])||r.photo?`<img src="${(r.photos&&r.photos[0])||r.photo}" alt="">`:'📦'}${r.photos&&r.photos.length>1?`<span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;border-radius:4px;padding:1px 5px;">+${r.photos.length}</span>`:''}</div>
       <div class="dc-body">
         <div class="dc-id">${r.id}</div>
         <div class="dc-name" title="${r.name}">${r.name}</div>
@@ -2402,8 +2492,14 @@ function openDbDetail(id){
   document.getElementById('dbd-body').innerHTML=`
     <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
       <div style="flex-shrink:0;">
-        ${r.photo?`<img src="${r.photo}" alt="" style="width:130px;height:130px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">`
-          :`<div style="width:130px;height:130px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:44px;">📦</div>`}
+        ${(()=>{
+          const allPhotos = (r.photos&&r.photos.length) ? r.photos : (r.photo ? [r.photo] : []);
+          if(!allPhotos.length) return '<div style="width:130px;height:130px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:44px;">📦</div>';
+          return '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+            + allPhotos.map((src,i)=>'<img src="'+src+'" alt="사진'+(i+1)+'" style="width:'+( allPhotos.length===1?'130':'80' )+'px;height:'+( allPhotos.length===1?'130':'80' )+'px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">'
+            ).join('')
+            + '</div>';
+        })()}
         <div style="margin-top:8px;text-align:center;">
           ${hasQtyInfo?`<span class="stock-badge ${stockCls}">재고 ${avail}/${r.totalQty} ${r.qtyUnit||'EA'}</span>`:'<span style="font-size:10px;color:var(--text3)">수량 미등록</span>'}
         </div>
@@ -2467,16 +2563,8 @@ function cloneDbItem(id) {
   setV('db-partno', (r.partNumbers||[]).join(', '));
   renderPartnoTags();
   setV('db-remark', r.remark||'');
-  // 사진 복사
-  setV('db-photo', r.photo||'');
-  if(r.photo) {
-    document.getElementById('db-photo-thumb').src = r.photo;
-    document.getElementById('db-photo-up-wrap').style.display = 'none';
-    document.getElementById('db-photo-thumb-wrap').style.display = 'block';
-  } else {
-    document.getElementById('db-photo-up-wrap').style.display = 'block';
-    document.getElementById('db-photo-thumb-wrap').style.display = 'none';
-  }
+  // 사진 복사 (photos 배열 우선, 없으면 photo 단일)
+  initPhotosGrid(r.photos&&r.photos.length ? r.photos : (r.photo ? [r.photo] : []));
   // 대출처 목록 복사
   document.getElementById('db-clients-wrap').innerHTML = '';
   (r.clients||[]).forEach(cl=>addDbClientRow(cl.name, cl.contact, cl.phone));
@@ -2506,11 +2594,8 @@ function editDbItem(id){
   document.getElementById('db-clients-wrap').innerHTML='';
   (r.clients||[]).forEach(c=>addDbClientRow(c.name, c.contact, c.phone));
   if(!r.clients||!r.clients.length) addDbClientRow();
-  if(r.photo){
-    document.getElementById('db-photo-thumb').src=r.photo;
-    document.getElementById('db-photo-up-wrap').style.display='none';
-    document.getElementById('db-photo-thumb-wrap').style.display='block';
-  }
+  // 사진 그리드 (photos 배열 우선, 없으면 photo 단일)
+  initPhotosGrid(r.photos&&r.photos.length ? r.photos : (r.photo ? [r.photo] : []));
   document.getElementById('db-save-txt').textContent='수정 저장';
   document.getElementById('dbf-panel').scrollIntoView({behavior:'smooth'});
   toast(`수정 모드: ${r.name}`);
@@ -3136,7 +3221,7 @@ function importJSON(e) {
       _restoreData = data;
 
       // 사진 포함 여부 확인
-      const photoCnt = data.toolDb.filter(r => r.photo && r.photo.length > 10).length;
+      const photoCnt = data.toolDb.filter(r => (r.photos&&r.photos.length) || (r.photo && r.photo.length > 10)).length;
 
       // 현재 데이터 건수
       const curLoans  = loans.length;
