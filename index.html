@@ -3101,6 +3101,18 @@ function renderDbList(){
     </div>`;
   }).join('');
 }
+// DB 상세 모달 사진 슬라이드 (모바일 호환)
+var _dbdSlideIdx = {};
+function dbdSlide(sid, photos, dir) {
+  if (!_dbdSlideIdx[sid]) _dbdSlideIdx[sid] = 0;
+  _dbdSlideIdx[sid] = (_dbdSlideIdx[sid] + dir + photos.length) % photos.length;
+  var idx = _dbdSlideIdx[sid];
+  var imgEl = document.getElementById(sid + '_img');
+  var cntEl = document.getElementById(sid + '_cnt');
+  if (imgEl) imgEl.src = photos[idx];
+  if (cntEl) cntEl.textContent = (idx + 1) + ' / ' + photos.length;
+}
+
 function openDbDetail(id){
   const r=toolDb.find(x=>x.id===id);if(!r)return;
   curDbDetail=id;
@@ -3124,9 +3136,20 @@ function openDbDetail(id){
         ${(()=>{
           const allPhotos = (r.photos&&r.photos.length) ? r.photos : (r.photo ? [r.photo] : []);
           if(!allPhotos.length) return '<div style="width:130px;height:130px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:44px;">📦</div>';
-          return '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
-            + allPhotos.map((src,i)=>'<img src="'+src+'" alt="사진'+(i+1)+'" style="width:'+( allPhotos.length===1?'130':'80' )+'px;height:'+( allPhotos.length===1?'130':'80' )+'px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">'
-            ).join('')
+          const sid = 'dbd-slide-'+r.id.replace(/[^a-zA-Z0-9]/g,'_');
+          const total = allPhotos.length;
+          // 슬라이드 컨테이너 (모바일 완전 호환)
+          return '<div id="'+sid+'" style="position:relative;width:130px;flex-shrink:0;">'
+            + '<div style="width:130px;height:130px;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);">'
+            + '<img id="'+sid+'_img" src="'+allPhotos[0]+'" alt="사진" style="width:130px;height:130px;object-fit:cover;display:block;">'
+            + '</div>'
+            + (total>1
+              ? '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;gap:4px;">'
+                + '<button onclick="dbdSlide(\''+sid+'\','+JSON.stringify(allPhotos)+',-1)" style="flex:1;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:13px;cursor:pointer;">‹</button>'
+                + '<span id="'+sid+'_cnt" style="font-size:10px;color:var(--text3);white-space:nowrap;">1 / '+total+'</span>'
+                + '<button onclick="dbdSlide(\''+sid+'\','+JSON.stringify(allPhotos)+',1)" style="flex:1;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:13px;cursor:pointer;">›</button>'
+                + '</div>'
+              : '')
             + '</div>';
         })()}
         <div style="margin-top:8px;text-align:center;">
@@ -3164,6 +3187,9 @@ function openDbDetail(id){
   document.getElementById('dbd-clone-btn').onclick=()=>{cloneDbItem(id);closeM('m-db-detail');};
   document.getElementById('dbd-del-btn').onclick=()=>{closeM('m-db-detail');openDelModal(id,'db');};
   document.getElementById('dbd-load-btn').onclick=()=>{loadFromDb(id);closeM('m-db-detail');switchTab('t-reg');};
+  // 슬라이드 인덱스 초기화
+  var sid = 'dbd-slide-'+id.replace(/[^a-zA-Z0-9]/g,'_');
+  _dbdSlideIdx[sid] = 0;
   openM('m-db-detail');
 }
 // ═══════════════════════════════════════════════════
