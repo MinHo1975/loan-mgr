@@ -21,6 +21,161 @@
   --radius:10px;--shadow:0 4px 24px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+
+/* ═══════════════════════════════════════
+   로그인 / 사용자관리 화면
+═══════════════════════════════════════ */
+#auth-screen{
+  position:fixed;inset:0;z-index:99999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+#auth-screen.hidden{display:none;}
+.auth-card{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:18px;width:100%;max-width:400px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  overflow:hidden;
+}
+.auth-top{
+  background:linear-gradient(135deg,#1e3a5f 0%,#1e2535 100%);
+  padding:32px 28px 24px;text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.auth-logo{
+  width:64px;height:64px;border-radius:14px;
+  object-fit:cover;margin:0 auto 14px;
+  border:2px solid rgba(96,165,250,.4);
+  box-shadow:0 4px 16px rgba(59,130,246,.3);
+  display:block;
+}
+.auth-title{font-size:22px;font-weight:700;color:var(--text1);margin-bottom:4px;}
+.auth-sub{font-size:12px;color:var(--text3);}
+.auth-body{padding:28px;}
+.auth-field{margin-bottom:16px;}
+.auth-label{font-size:11px;font-weight:600;color:var(--text3);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:block;}
+.auth-input-wrap{position:relative;}
+.auth-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:9px;padding:11px 14px;color:var(--text1);
+  font-size:14px;font-family:'Noto Sans KR',sans-serif;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.auth-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.auth-input.has-icon{padding-right:42px;}
+.auth-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  font-size:16px;line-height:1;padding:4px;
+}
+.auth-eye:hover{color:var(--text2);}
+/* 아이디 콤보 드롭다운 */
+.auth-combo{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:9px;z-index:999;max-height:180px;overflow-y:auto;
+  box-shadow:var(--shadow);display:none;
+}
+.auth-combo.open{display:block;}
+.auth-combo-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;cursor:pointer;transition:background .12s;
+}
+.auth-combo-item:hover{background:var(--accent-dim);}
+.auth-combo-avatar{
+  width:30px;height:30px;border-radius:50%;object-fit:cover;
+  background:var(--bg4);border:1px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:13px;overflow:hidden;
+}
+.auth-combo-avatar img{width:30px;height:30px;object-fit:cover;border-radius:50%;}
+.auth-combo-name{font-size:13px;color:var(--text1);font-weight:500;}
+.auth-combo-id{font-size:11px;color:var(--text3);}
+/* 로그인한 사용자 사진 */
+.auth-user-photo{
+  width:56px;height:56px;border-radius:50%;object-fit:cover;
+  border:2px solid var(--accent);margin:0 auto 4px;display:none;
+  box-shadow:0 0 0 4px rgba(59,130,246,.2);
+}
+.auth-user-name{font-size:12px;color:var(--accent2);text-align:center;
+  margin-bottom:12px;display:none;font-weight:600;}
+/* 로그인 버튼 */
+.auth-btn{
+  width:100%;padding:13px;border:none;border-radius:9px;
+  background:var(--accent);color:#fff;font-size:15px;
+  font-weight:600;font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;transition:all .15s;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.auth-btn:hover{background:#2563eb;transform:translateY(-1px);}
+.auth-btn:active{transform:translateY(0);}
+/* 실패 메시지 */
+.auth-err{
+  background:var(--red-dim);border:1px solid rgba(239,68,68,.3);
+  border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);
+  margin-bottom:14px;display:none;text-align:center;line-height:1.5;
+}
+.auth-err.show{display:block;}
+/* 시도 횟수 표시 */
+.auth-attempts{
+  text-align:center;font-size:11px;color:var(--text3);
+  margin-top:12px;
+}
+.auth-attempts span{color:var(--orange);font-weight:600;}
+/* 잠금 오버레이 */
+#lock-overlay{
+  position:fixed;inset:0;z-index:999999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:20px;
+  display:none;
+}
+.lock-icon{font-size:64px;}
+.lock-msg{font-size:20px;font-weight:700;color:var(--red);text-align:center;line-height:1.6;}
+.lock-sub{font-size:13px;color:var(--text3);text-align:center;}
+
+/* ═══════════════════════════════════════
+   사용자 관리 모달
+═══════════════════════════════════════ */
+.um-avatar-wrap{position:relative;width:80px;height:80px;margin:0 auto 8px;}
+.um-avatar{
+  width:80px;height:80px;border-radius:50%;object-fit:cover;
+  background:var(--bg4);border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;overflow:hidden;cursor:pointer;
+}
+.um-avatar img{width:80px;height:80px;object-fit:cover;border-radius:50%;}
+.um-avatar-edit{
+  position:absolute;bottom:0;right:0;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--accent);color:#fff;border:2px solid var(--bg2);
+  font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+/* 사용자 카드 리스트 */
+.um-user-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;margin-bottom:8px;
+}
+.um-user-avatar{
+  width:44px;height:44px;border-radius:50%;object-fit:cover;
+  background:var(--bg4);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;overflow:hidden;
+}
+.um-user-avatar img{width:44px;height:44px;object-fit:cover;border-radius:50%;}
+.um-user-info{flex:1;min-width:0;}
+.um-user-name{font-size:13px;font-weight:600;color:var(--text1);}
+.um-user-id{font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+.um-admin-badge{
+  display:inline-flex;background:var(--accent-dim);color:var(--accent2);
+  border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;
+  margin-left:6px;
+}
+
 /* iOS Safari 필수: cursor:pointer 없으면 click 이벤트 무시됨 */
 *{-webkit-tap-highlight-color:rgba(59,130,246,0.15);}
 body,button,a,label,[onclick]{cursor:pointer;}
@@ -423,6 +578,256 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════
+     환영 메시지 오버레이
+═══════════════════════════════════════════════ -->
+<style>
+#welcome-overlay{
+  position:fixed;inset:0;z-index:99998;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;
+  background:rgba(0,0,0,0);
+  transition:opacity .4s;
+}
+#welcome-overlay.show{
+  pointer-events:all;opacity:1;
+  background:rgba(0,0,0,.55);
+}
+.welcome-card{
+  background:linear-gradient(135deg,#1e3a5f 0%,#0f2744 60%,#1a1040 100%);
+  border:1px solid rgba(96,165,250,.5);
+  border-radius:20px;
+  padding:36px 44px;
+  text-align:center;
+  box-shadow:0 0 60px rgba(59,130,246,.35), 0 20px 60px rgba(0,0,0,.6);
+  transform:scale(.85) translateY(20px);
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+  min-width:280px;
+}
+#welcome-overlay.show .welcome-card{
+  transform:scale(1) translateY(0);
+}
+/* 반짝이 파티클 */
+.welcome-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 20%, rgba(96,165,250,.18) 0%, transparent 60%),
+             radial-gradient(ellipse at 80% 80%, rgba(168,85,247,.15) 0%, transparent 50%);
+  animation:wShimmer 2s ease-in-out infinite alternate;
+}
+@keyframes wShimmer{
+  from{opacity:.6} to{opacity:1}
+}
+.welcome-avatar{
+  width:72px;height:72px;border-radius:50%;object-fit:cover;
+  border:3px solid rgba(96,165,250,.7);
+  box-shadow:0 0 0 6px rgba(59,130,246,.2), 0 0 24px rgba(59,130,246,.4);
+  margin:0 auto 16px;display:block;
+  animation:wPulse 1.8s ease-in-out infinite;
+}
+@keyframes wPulse{
+  0%,100%{box-shadow:0 0 0 6px rgba(59,130,246,.2),0 0 24px rgba(59,130,246,.4);}
+  50%{box-shadow:0 0 0 10px rgba(59,130,246,.1),0 0 40px rgba(59,130,246,.6);}
+}
+.welcome-avatar-placeholder{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#7c3aed);
+  border:3px solid rgba(96,165,250,.7);
+  box-shadow:0 0 0 6px rgba(59,130,246,.2), 0 0 24px rgba(59,130,246,.4);
+  margin:0 auto 16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;
+  animation:wPulse 1.8s ease-in-out infinite;
+}
+.welcome-hello{
+  font-size:13px;color:rgba(96,165,250,.8);
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:6px;font-weight:500;
+}
+.welcome-name{
+  font-size:26px;font-weight:700;color:#fff;
+  margin-bottom:6px;
+  text-shadow:0 0 20px rgba(96,165,250,.8);
+  animation:wGlow 1.5s ease-in-out infinite alternate;
+}
+@keyframes wGlow{
+  from{text-shadow:0 0 10px rgba(96,165,250,.5);}
+  to{text-shadow:0 0 30px rgba(96,165,250,1), 0 0 50px rgba(168,85,247,.5);}
+}
+.welcome-msg{
+  font-size:14px;color:rgba(255,255,255,.7);margin-bottom:20px;
+}
+/* 별 파티클 */
+.welcome-stars{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+}
+.wstar{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:#fff;animation:wStarAnim var(--d,1.5s) ease-in-out infinite var(--delay,0s);
+  opacity:0;
+}
+@keyframes wStarAnim{
+  0%{opacity:0;transform:scale(0) translate(0,0);}
+  40%{opacity:1;transform:scale(1.2);}
+  100%{opacity:0;transform:scale(0) translate(var(--tx,10px),var(--ty,-30px));}
+}
+.welcome-bar{
+  height:3px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),#a855f7,var(--accent),transparent);
+  margin-bottom:18px;
+  animation:wBar 2s ease-in-out infinite;
+}
+@keyframes wBar{
+  0%,100%{opacity:.5;transform:scaleX(.8);}
+  50%{opacity:1;transform:scaleX(1);}
+}
+</style>
+
+<div id="welcome-overlay">
+  <div class="welcome-card">
+    <!-- 별 파티클 12개 -->
+    <div class="welcome-stars" id="welcome-stars"></div>
+    <div id="welcome-avatar-wrap"></div>
+    <div class="welcome-hello">✦ WELCOME ✦</div>
+    <div class="welcome-name" id="welcome-name"></div>
+    <div class="welcome-bar"></div>
+    <div class="welcome-msg">환영합니다 😊<br>오늘도 좋은 하루 되세요!</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     잠금 오버레이 (3회 실패 시)
+═══════════════════════════════════════════════ -->
+<div id="lock-overlay">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-msg">야 임마!<br>당장 나가— 어디서 재수없게</div>
+  <div class="lock-sub">비인가 접근이 감지되었습니다.<br>브라우저를 닫고 다시 시도하세요.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     로그인 화면
+═══════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-top">
+      <img id="auth-top-logo" class="auth-logo"
+        src="data:image/jpeg;base64,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"
+        alt="logo">
+      <div class="auth-title">LOAN MGR</div>
+      <div class="auth-sub">대출품 관리대장 — 로그인</div>
+    </div>
+    <div class="auth-body">
+      <!-- 사용자 사진 (아이디 선택 시 표시) -->
+      <img id="login-user-photo" class="auth-user-photo" src="" alt="">
+      <div id="login-user-name" class="auth-user-name"></div>
+
+      <!-- 오류 메시지 -->
+      <div class="auth-err" id="auth-err-msg">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+
+      <!-- 아이디 -->
+      <div class="auth-field">
+        <label class="auth-label">아이디</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input" id="login-id" type="text"
+            placeholder="아이디를 선택하거나 입력하세요"
+            autocomplete="off" autocapitalize="off" spellcheck="false"
+            oninput="loginIdInput()" onfocus="openLoginCombo()" onblur="setTimeout(closeLoginCombo,180)">
+          <div class="auth-combo" id="login-combo"></div>
+        </div>
+      </div>
+
+      <!-- 비밀번호 -->
+      <div class="auth-field">
+        <label class="auth-label">비밀번호</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input has-icon" id="login-pw" type="password"
+            placeholder="비밀번호 입력"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="auth-eye" id="pw-eye" onclick="togglePwEye()" tabindex="-1">👁</button>
+        </div>
+      </div>
+
+      <button class="auth-btn" onclick="doLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        로그인
+      </button>
+
+      <div class="auth-attempts" id="auth-attempts" style="display:none;">
+        로그인 실패: <span id="fail-count">0</span> / 3회
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     사용자 관리 모달
+═══════════════════════════════════════════════ -->
+<div class="mo" id="m-users">
+  <div class="md" style="max-width:560px;">
+    <div class="mh">
+      <div class="mt">👥 사용자 관리</div>
+      <button class="mc" onclick="closeM('m-users')">✕</button>
+    </div>
+    <div class="mb">
+
+      <!-- 신규 사용자 등록 폼 -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:14px;">
+          ➕ 사용자 등록 / 수정
+        </div>
+
+        <!-- 사진 등록 -->
+        <div style="text-align:center;margin-bottom:16px;">
+          <div class="um-avatar-wrap">
+            <div class="um-avatar" id="um-avatar-preview" onclick="document.getElementById('um-photo-file').click()">
+              👤
+            </div>
+            <div class="um-avatar-edit" onclick="document.getElementById('um-photo-file').click()">📷</div>
+          </div>
+          <input type="file" id="um-photo-file" accept="image/*" style="display:none;" onchange="umPhotoSelected(event)">
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">클릭하여 사진 등록</div>
+        </div>
+
+        <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div class="fl">이름 <span class="req">*</span></div>
+            <input class="fi" id="um-name" placeholder="홍길동">
+          </div>
+          <div>
+            <div class="fl">아이디 <span class="req">*</span></div>
+            <input class="fi" id="um-id" placeholder="hong123" autocapitalize="off">
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <div class="fl">비밀번호 <span class="req">*</span></div>
+          <div class="auth-input-wrap">
+            <input class="fi has-icon" id="um-pw" type="password" placeholder="비밀번호 입력" style="padding-right:40px;">
+            <button class="auth-eye" onclick="toggleUmPwEye()" tabindex="-1" style="top:50%;transform:translateY(-50%);">👁</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn bp" onclick="umSaveUser()" style="flex:1;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span id="um-save-label">등록</span>
+          </button>
+          <button class="btn bo" onclick="umCancelEdit()" id="um-cancel-btn" style="display:none;">취소</button>
+        </div>
+      </div>
+
+      <!-- 등록된 사용자 목록 -->
+      <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:10px;">
+        등록된 사용자 <span id="um-user-count" style="color:var(--text3);font-weight:400;"></span>
+      </div>
+      <div id="um-user-list"></div>
+
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeM('m-users')">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <div class="header">
   <div class="header-logo" style="gap:8px;">
@@ -454,6 +859,9 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
     </label>
     <div class="date-badge" id="idb-status" title="저장소 사용량" style="cursor:default;">💾 —</div>
     <div class="date-badge" id="todayBadge"></div>
+    <button class="btn bo btn-sm" onclick="openUserMgr()" title="사용자 관리" style="font-size:11px;padding:4px 10px;margin-left:4px;" id="btn-usermgr">
+      👤 사용자
+    </button>
   </div>
 </div>
 
@@ -3735,60 +4143,70 @@ async function gsSyncAll() {
   syncBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg> 동기화중...';
 
   try {
-    // 먼저 Sheets에서 최신 데이터 가져오기 (병합 방식)
+    // STEP1: Sheets에서 최신 데이터 가져오기
     toast('⏳ Google Sheets에서 데이터를 가져오는 중...', '');
-    const getRes = await fetch(_gsUrl + '?action=getAll');
+    const getRes = await fetch(_gsUrl + '?action=getAll', { method: 'GET' });
+    if (!getRes.ok) throw new Error('서버 응답 오류: ' + getRes.status);
     const remoteData = await getRes.json();
 
     if (remoteData.ok) {
-      // 원격 데이터와 로컬 데이터 병합 (id 기준, 최신 우선)
       const mergedLoans  = mergeById(loans,  remoteData.loans  || []);
       const mergedToolDb = mergeById(toolDb, remoteData.toolDb || []);
       loans  = mergedLoans;
       toolDb = mergedToolDb;
-      await Promise.all([saveLoans(), saveToolDb()]);
+      // saveLoans의 gsAutoSync 후킹이 무한루프 발생 방지 — 직접 IDB 저장
+      await Promise.all([idbPutAll('loans', loans), idbPutAll('tooldb', toolDb)]);
     }
 
-    // 병합된 데이터를 Sheets에 업로드
+    // STEP2: 병합 데이터를 Sheets에 업로드
+    // ★ Apps Script는 POST body를 e.postData.contents로 읽음
+    // ★ Content-Type을 text/plain으로 해야 preflight(CORS) 없이 동작
     toast('⏳ Google Sheets에 데이터를 저장하는 중...', '');
-    const payload = { action: 'saveAll', loans: loans, toolDb: toolDb };
+    const payload = JSON.stringify({ action: 'saveAll', loans: loans, toolDb: toolDb });
     const saveRes = await fetch(_gsUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payload
     });
+    if (!saveRes.ok) throw new Error('저장 서버 응답 오류: ' + saveRes.status);
     const saveData = await saveRes.json();
 
     if (saveData.ok) {
       updateBadges(); updateStats(); renderLed(); renderDbList(); renderDbSearch();
+      updateStorageStatus();
       const now = new Date().toLocaleTimeString('ko-KR');
       toast('✅ 동기화 완료! (' + now + ') ' + saveData.msg, 'suc');
-      // 마지막 동기화 시간 표시
       document.getElementById('gs-btn-label').textContent = '🟢 ' + now + ' 동기화';
     } else {
       throw new Error(saveData.msg || '저장 실패');
     }
   } catch(e) {
-    toast('❌ 동기화 실패: ' + (e.message.includes('fetch') ? '네트워크 오류 또는 URL 확인 필요' : e.message), 'err');
+    let msg = e.message;
+    if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror')) {
+      msg = '네트워크 오류입니다. Apps Script 배포 설정에서 액세스 권한을 "모든 사용자"로 변경했는지 확인하세요.';
+    }
+    toast('❌ 동기화 실패: ' + msg, 'err');
   } finally {
     syncBtn.disabled = false;
     syncBtn.innerHTML = origText;
   }
 }
 
-// ── Sheets에서 불러오기만 (덮어쓰기) ──
+// ── Sheets에서 불러오기만 ──
 async function gsLoadFromSheets() {
   if (!_gsUrl) { toast('먼저 Google Sheets 연동을 설정해주세요.', 'err'); return; }
   if (!confirm('Google Sheets에서 데이터를 불러옵니다.\n현재 앱의 데이터와 병합됩니다. 계속할까요?')) return;
   toast('⏳ Google Sheets에서 불러오는 중...', '');
   try {
-    const res = await fetch(_gsUrl + '?action=getAll');
+    const res = await fetch(_gsUrl + '?action=getAll', { method: 'GET' });
+    if (!res.ok) throw new Error('서버 응답 오류: ' + res.status);
     const data = await res.json();
     if (!data.ok) throw new Error(data.msg);
     loans  = mergeById(loans,  data.loans  || []);
     toolDb = mergeById(toolDb, data.toolDb || []);
-    await Promise.all([saveLoans(), saveToolDb()]);
+    await Promise.all([idbPutAll('loans', loans), idbPutAll('tooldb', toolDb)]);
     updateBadges(); updateStats(); renderLed(); renderDbList(); renderDbSearch();
+    updateStorageStatus();
     toast('✅ 불러오기 완료! 대출기록: ' + loans.length + '건, 공구DB: ' + toolDb.length + '건', 'suc');
   } catch(e) {
     toast('❌ 불러오기 실패: ' + e.message, 'err');
@@ -3816,19 +4234,22 @@ function mergeById(local, remote) {
 }
 
 // ── 저장 시 자동 동기화 (선택적) ──
+let _gsAutoSyncRunning = false;  // 무한루프 방지 플래그
 async function gsAutoSync() {
   if (!_gsEnabled || !_gsUrl) return;
+  if (_gsAutoSyncRunning) return;   // 이미 실행 중이면 스킵
+  _gsAutoSyncRunning = true;
   try {
-    const payload = { action: 'saveAll', loans: loans, toolDb: toolDb };
+    const payload = JSON.stringify({ action: 'saveAll', loans: loans, toolDb: toolDb });
     await fetch(_gsUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payload
     });
-    // 조용히 성공 (toast 없음)
   } catch(e) {
     console.warn('자동 동기화 실패:', e.message);
-    // 자동 동기화 실패는 조용히 처리
+  } finally {
+    _gsAutoSyncRunning = false;
   }
 }
 
@@ -3851,7 +4272,6 @@ function copyGasCode() {
   navigator.clipboard.writeText(code).then(() => {
     toast('✅ Apps Script 코드가 클립보드에 복사되었습니다!', 'suc');
   }).catch(() => {
-    // 폴백
     const ta = document.createElement('textarea');
     ta.value = code;
     document.body.appendChild(ta);
@@ -3867,16 +4287,354 @@ const gsStyle = document.createElement('style');
 gsStyle.textContent = '@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }';
 document.head.appendChild(gsStyle);
 
-// ── 기존 save 함수들에 자동 동기화 후킹 ──
+// ── saveLoans 후킹: 자동 동기화 (무한루프 방지) ──
+// gsSyncAll/gsLoadFromSheets 내부에서는 idbPutAll 직접 호출하므로 루프 없음
 const _origSaveLoans = window.saveLoans;
 window.saveLoans = async function() {
   await _origSaveLoans();
-  // 자동 동기화 (비동기, UI 블로킹 없음)
-  setTimeout(gsAutoSync, 500);
+  setTimeout(gsAutoSync, 800);  // 딜레이를 늘려 연속 호출 방지
 };
 
 // ── 초기 설정 로드 ──
 window.addEventListener('load', function() {
   setTimeout(gsLoadSettings, 100);
+});
+</script>
+<script>
+// ═══════════════════════════════════════════════════
+//  인증(로그인) 모듈
+// ═══════════════════════════════════════════════════
+
+const AUTH_KEY    = 'loanmgr_users_v1';
+const SESSION_KEY = 'loanmgr_session';
+let _loginFailCount = 0;
+let _umEditId    = null;
+let _umPhotoData = '';
+
+const DEFAULT_ADMIN = {
+  id: 'ymhhaha',
+  pw: btoa('2001'),
+  name: '관리자',
+  photo: '',
+  isAdmin: true,
+  createdAt: new Date().toISOString()
+};
+
+function authGetUsers() {
+  try { const r = localStorage.getItem(AUTH_KEY); return r ? JSON.parse(r) : []; }
+  catch(e) { return []; }
+}
+function authSaveUsers(u) { localStorage.setItem(AUTH_KEY, JSON.stringify(u)); }
+
+function authInit() {
+  let users = authGetUsers();
+  if (!users.length) { users.push(DEFAULT_ADMIN); authSaveUsers(users); }
+  const sid = sessionStorage.getItem(SESSION_KEY);
+  if (sid) {
+    const u = users.find(u => u.id === sid);
+    if (u) { authPass(u); return; }
+  }
+  renderLoginCombo();
+}
+
+function renderLoginCombo(filter) {
+  const users = authGetUsers();
+  const q = (filter || '').toLowerCase();
+  const combo = document.getElementById('login-combo');
+  const list  = q ? users.filter(u => u.id.toLowerCase().includes(q) || u.name.toLowerCase().includes(q)) : users;
+  if (!list.length) {
+    combo.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text3);">등록된 사용자 없음</div>';
+  } else {
+    combo.innerHTML = list.map(function(u) {
+      const av = u.photo
+        ? '<div class="auth-combo-avatar"><img src="' + u.photo + '" alt="' + u.name + '"></div>'
+        : '<div class="auth-combo-avatar">' + u.name.charAt(0) + '</div>';
+      return '<div class="auth-combo-item" onmousedown="loginSelectId(\'' + u.id + '\')">'
+        + av
+        + '<div>'
+        + '<div class="auth-combo-name">' + u.name + (u.isAdmin ? '<span class="um-admin-badge">관리자</span>' : '') + '</div>'
+        + '<div class="auth-combo-id">' + u.id + '</div>'
+        + '</div></div>';
+    }).join('');
+  }
+}
+
+function openLoginCombo() {
+  renderLoginCombo(document.getElementById('login-id').value);
+  document.getElementById('login-combo').classList.add('open');
+}
+function closeLoginCombo() {
+  document.getElementById('login-combo').classList.remove('open');
+}
+function loginIdInput() {
+  renderLoginCombo(document.getElementById('login-id').value);
+  openLoginCombo();
+  const u = authGetUsers().find(function(u){ return u.id === document.getElementById('login-id').value; });
+  updateLoginPhoto(u || null);
+}
+function loginSelectId(id) {
+  document.getElementById('login-id').value = id;
+  closeLoginCombo();
+  const u = authGetUsers().find(function(u){ return u.id === id; });
+  updateLoginPhoto(u || null);
+  document.getElementById('login-pw').focus();
+}
+function updateLoginPhoto(u) {
+  const pe = document.getElementById('login-user-photo');
+  const ne = document.getElementById('login-user-name');
+  if (u && u.photo) { pe.src = u.photo; pe.style.display = 'block'; }
+  else { pe.style.display = 'none'; }
+  if (u) { ne.textContent = u.name + ' 님'; ne.style.display = 'block'; }
+  else { ne.style.display = 'none'; }
+}
+
+function togglePwEye() {
+  const i = document.getElementById('login-pw');
+  const b = document.getElementById('pw-eye');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  b.textContent = i.type === 'password' ? '👁' : '🙈';
+}
+function toggleUmPwEye() {
+  const i = document.getElementById('um-pw');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+function doLogin() {
+  const id  = document.getElementById('login-id').value.trim();
+  const pw  = document.getElementById('login-pw').value;
+  const err = document.getElementById('auth-err-msg');
+  err.classList.remove('show');
+
+  if (!id || !pw) {
+    err.textContent = '아이디와 비밀번호를 모두 입력해주세요.';
+    err.classList.add('show'); return;
+  }
+
+  const users = authGetUsers();
+  const u = users.find(function(u){ return u.id === id && u.pw === btoa(pw); });
+
+  if (u) {
+    _loginFailCount = 0;
+    sessionStorage.setItem(SESSION_KEY, u.id);
+    authPass(u);
+  } else {
+    _loginFailCount++;
+    const att = document.getElementById('auth-attempts');
+    att.style.display = 'block';
+    document.getElementById('fail-count').textContent = _loginFailCount;
+
+    if (_loginFailCount >= 3) {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('lock-overlay').style.display = 'flex';
+    } else {
+      err.textContent = '아이디 또는 비밀번호가 올바르지 않습니다. (' + (3 - _loginFailCount) + '회 남음)';
+      err.classList.add('show');
+      document.getElementById('login-pw').value = '';
+      document.getElementById('login-pw').focus();
+    }
+  }
+}
+
+function authPass(u) {
+  document.getElementById('auth-screen').classList.add('hidden');
+  const btn = document.getElementById('btn-usermgr');
+  if (btn) {
+    const av = u.photo
+      ? '<img src="' + u.photo + '" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:-4px;margin-right:4px;">'
+      : '👤 ';
+    btn.innerHTML = av + u.name;
+    if (!u.isAdmin) btn.onclick = function(){ toast('관리자만 접근 가능합니다.', 'err'); };
+  }
+
+  // ── 환영 메시지 표시 ──
+  showWelcome(u);
+}
+
+function showWelcome(u) {
+  // 아바타
+  const wrap = document.getElementById('welcome-avatar-wrap');
+  if (u.photo) {
+    wrap.innerHTML = '<img src="' + u.photo + '" class="welcome-avatar" alt="' + u.name + '">';
+  } else {
+    wrap.innerHTML = '<div class="welcome-avatar-placeholder">👤</div>';
+  }
+
+  // 이름 표시
+  document.getElementById('welcome-name').textContent = u.name + ' 님';
+
+  // 별 파티클 생성
+  const starsEl = document.getElementById('welcome-stars');
+  starsEl.innerHTML = '';
+  for (var i = 0; i < 18; i++) {
+    var s = document.createElement('div');
+    s.className = 'wstar';
+    s.style.cssText = [
+      'left:' + (10 + Math.random() * 80) + '%;',
+      'top:'  + (10 + Math.random() * 80) + '%;',
+      '--d:'  + (1.2 + Math.random() * 1.5) + 's;',
+      '--delay:' + (Math.random() * 1.2) + 's;',
+      '--tx:' + (Math.random() * 60 - 30) + 'px;',
+      '--ty:' + (-(Math.random() * 50 + 20)) + 'px;',
+      'width:' + (2 + Math.random() * 4) + 'px;',
+      'height:' + (2 + Math.random() * 4) + 'px;',
+      'background:' + (['#fff','#93c5fd','#c4b5fd','#86efac'][Math.floor(Math.random()*4)]) + ';'
+    ].join('');
+    starsEl.appendChild(s);
+  }
+
+  // 오버레이 표시
+  var ov = document.getElementById('welcome-overlay');
+  ov.classList.add('show');
+
+  // 2.8초 후 자동 닫힘
+  ov._timer = setTimeout(function() { closeWelcome(); }, 2800);
+
+  // 클릭하면 즉시 닫힘
+  ov.addEventListener('click', closeWelcome, { once: true });
+}
+
+function closeWelcome() {
+  var ov = document.getElementById('welcome-overlay');
+  if (!ov) return;
+  if (ov._timer) { clearTimeout(ov._timer); ov._timer = null; }
+  ov.classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════
+//  사용자 관리
+// ═══════════════════════════════════════════════════
+
+function openUserMgr() {
+  const sid   = sessionStorage.getItem(SESSION_KEY);
+  const users = authGetUsers();
+  const me    = users.find(function(u){ return u.id === sid; });
+  if (!me || !me.isAdmin) { toast('관리자만 접근 가능합니다.', 'err'); return; }
+  umCancelEdit();
+  renderUmUserList();
+  openM('m-users');
+}
+
+function renderUmUserList() {
+  const users = authGetUsers();
+  document.getElementById('um-user-count').textContent = '(' + users.length + '명)';
+  const el = document.getElementById('um-user-list');
+  if (!users.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px;">등록된 사용자가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = users.map(function(u) {
+    const av = u.photo
+      ? '<div class="um-user-avatar"><img src="' + u.photo + '" alt="' + u.name + '"></div>'
+      : '<div class="um-user-avatar">' + u.name.charAt(0) + '</div>';
+    const onlyAdmin = u.isAdmin && users.filter(function(x){ return x.isAdmin; }).length <= 1;
+    return '<div class="um-user-card">'
+      + av
+      + '<div class="um-user-info">'
+      + '<div class="um-user-name">' + u.name + (u.isAdmin ? '<span class="um-admin-badge">관리자</span>' : '') + '</div>'
+      + '<div class="um-user-id">' + u.id + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+      + '<button class="btn bo btn-xs" onclick="umEditUser(\'' + u.id + '\')">✏️</button>'
+      + (onlyAdmin
+          ? '<button class="btn bd btn-xs" disabled title="유일한 관리자 삭제 불가">🗑</button>'
+          : '<button class="btn bd btn-xs" onclick="umDeleteUser(\'' + u.id + '\')">🗑</button>')
+      + '</div></div>';
+  }).join('');
+}
+
+function umPhotoSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 100; c.height = 100;
+      const ctx = c.getContext('2d');
+      const sz = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width-sz)/2, (img.height-sz)/2, sz, sz, 0, 0, 100, 100);
+      _umPhotoData = c.toDataURL('image/jpeg', 0.85);
+      document.getElementById('um-avatar-preview').innerHTML = '<img src="' + _umPhotoData + '" alt="사진">';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function umSaveUser() {
+  const name = document.getElementById('um-name').value.trim();
+  const id   = document.getElementById('um-id').value.trim();
+  const pw   = document.getElementById('um-pw').value;
+
+  if (!name) { toast('이름을 입력하세요.', 'err'); return; }
+  if (!id)   { toast('아이디를 입력하세요.', 'err'); return; }
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(id)) {
+    toast('아이디는 영문/숫자/_ 3~20자만 가능합니다.', 'err'); return;
+  }
+
+  const users = authGetUsers();
+
+  if (_umEditId) {
+    const idx = users.findIndex(function(u){ return u.id === _umEditId; });
+    if (idx < 0) return;
+    if (id !== _umEditId && users.some(function(u){ return u.id === id; })) {
+      toast('이미 사용 중인 아이디입니다.', 'err'); return;
+    }
+    users[idx].name = name;
+    users[idx].id   = id;
+    if (pw) users[idx].pw = btoa(pw);
+    if (_umPhotoData) users[idx].photo = _umPhotoData;
+    authSaveUsers(users);
+    if (sessionStorage.getItem(SESSION_KEY) === _umEditId) sessionStorage.setItem(SESSION_KEY, id);
+    toast('✅ \'' + name + '\' 정보가 수정되었습니다.', 'suc');
+  } else {
+    if (!pw) { toast('비밀번호를 입력하세요.', 'err'); return; }
+    if (users.some(function(u){ return u.id === id; })) { toast('이미 사용 중인 아이디입니다.', 'err'); return; }
+    users.push({ id: id, pw: btoa(pw), name: name, photo: _umPhotoData || '', isAdmin: false, createdAt: new Date().toISOString() });
+    authSaveUsers(users);
+    toast('✅ \'' + name + '\' 사용자가 등록되었습니다.', 'suc');
+  }
+  umCancelEdit();
+  renderUmUserList();
+  renderLoginCombo();
+}
+
+function umEditUser(id) {
+  const u = authGetUsers().find(function(u){ return u.id === id; });
+  if (!u) return;
+  _umEditId = id; _umPhotoData = u.photo || '';
+  document.getElementById('um-name').value = u.name;
+  document.getElementById('um-id').value   = u.id;
+  document.getElementById('um-pw').value   = '';
+  document.getElementById('um-avatar-preview').innerHTML = u.photo ? '<img src="' + u.photo + '" alt="사진">' : '👤';
+  document.getElementById('um-save-label').textContent   = '수정 저장';
+  document.getElementById('um-cancel-btn').style.display = 'inline-flex';
+  document.getElementById('um-name').focus();
+}
+
+function umDeleteUser(id) {
+  const users = authGetUsers();
+  const u = users.find(function(u){ return u.id === id; });
+  if (!u || !confirm('\'' + u.name + '(' + u.id + ')\' 사용자를 삭제하시겠습니까?')) return;
+  authSaveUsers(users.filter(function(u){ return u.id !== id; }));
+  renderUmUserList();
+  renderLoginCombo();
+  toast('\'' + u.name + '\' 사용자가 삭제되었습니다.', '');
+}
+
+function umCancelEdit() {
+  _umEditId = null; _umPhotoData = '';
+  ['um-name','um-id','um-pw'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('um-avatar-preview').innerHTML = '👤';
+  document.getElementById('um-save-label').textContent   = '등록';
+  document.getElementById('um-cancel-btn').style.display = 'none';
+  const pf = document.getElementById('um-photo-file');
+  if (pf) pf.value = '';
+}
+
+window.addEventListener('load', function() {
+  setTimeout(authInit, 150);
 });
 </script>
