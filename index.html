@@ -1102,7 +1102,7 @@ tbody tr.tr-perm td:first-child{border-left:2px solid var(--purple);}
       <div class="fbar">
         <div class="sw">
           <svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="fi" id="l-q" placeholder="품명, 대출처, 관리번호..." oninput="renderLed()">
+          <input class="fi" id="l-q" placeholder="관리번호, 품명, 분류, 규격, 대출처, 연락처, 용도, 비고 등..." oninput="renderLed()">
         </div>
         <select class="fs" id="l-cat" onchange="renderLed()" style="width:115px">
           <option value="">전체 분류</option><option>금형류</option><option>치구류</option><option>공구류</option><option>기타</option>
@@ -2712,7 +2712,12 @@ function getFiltered() {
   const df=getV('l-df'), dt=getV('l-dt');
   const today=new Date();today.setHours(0,0,0,0);
   return loans.filter(r=>{
-    if(q&&![r.id,r.itemName,r.borrower].some(v=>(v||'').toLowerCase().includes(q)))return false;
+    if(q){
+      var searchFields=[r.id,r.itemName,r.category,r.subCategory,r.spec,r.unit,r.borrower,r.contact,r.phone,r.loanDate,r.returnDueDate,r.purpose,r.remark,r.dbRef].map(v=>(v||'').toLowerCase());
+      var partnoStr=(r.partNumbers||[]).join(' ').toLowerCase();
+      var qtyStr=String(r.qty||'');
+      if(!searchFields.some(v=>v.includes(q))&&!partnoStr.includes(q)&&!qtyStr.includes(q))return false;
+    }
     if(cat&&r.category!==cat)return false;
     if(df&&r.loanDate<df)return false;
     if(dt&&r.loanDate>dt)return false;
