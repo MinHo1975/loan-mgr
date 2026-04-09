@@ -2857,14 +2857,22 @@ function openDelModal(id,tgt){
 function confirmDelete(){
   if(delTgt==='loan'){
     const idx=loans.findIndex(r=>r.id===pendDel);if(idx<0)return;
-    const id=loans[idx].id;loans.splice(idx,1);save();updateBadges();renderLed();
-    toast(`삭제: ${id}`);
+    const id=loans[idx].id;loans.splice(idx,1);
+    // IDB 직접 저장 — saveLoans 후킹(gsAutoSync=Pull+Push)을 우회하여 되살아남 방지
+    idbPutAll('loans', loans).catch(e=>console.warn(e));
+    updateBadges();renderLed();
+    toast('삭제: '+id);
   } else {
     const idx=toolDb.findIndex(r=>r.id===pendDel);if(idx<0)return;
-    const nm=toolDb[idx].name;toolDb.splice(idx,1);saveDb();updateBadges();renderDbList();renderDbSearch();
-    toast(`DB 삭제: ${nm}`);
+    const nm=toolDb[idx].name;toolDb.splice(idx,1);
+    // IDB 직접 저장 — saveDb 후킹 우회
+    idbPutAll('tooldb', toolDb).catch(e=>console.warn(e));
+    updateBadges();renderDbList();renderDbSearch();
+    toast('DB 삭제: '+nm);
   }
   closeM('m-del');
+  // 삭제 직후 즉시 Push만 (debounce 800ms — 연속 삭제 시 마지막 1회)
+  gsAutoSyncAfterDelete();
 }
 
 // ═══════════════════════════════════════════════════
@@ -4191,8 +4199,8 @@ async function gsSyncAll() {
     const remoteData = await getRes.json();
 
     if (remoteData.ok) {
-      const mergedLoans  = mergeById(loans,  remoteData.loans  || []);
-      const mergedToolDb = mergeById(toolDb, remoteData.toolDb || []);
+      const mergedLoans  = mergeByUpdated(loans,  remoteData.loans  || []);
+      const mergedToolDb = mergeByUpdated(toolDb, remoteData.toolDb || []);
       loans  = mergedLoans;
       toolDb = mergedToolDb;
       // saveLoans의 gsAutoSync 후킹이 무한루프 발생 방지 — 직접 IDB 저장
@@ -4243,8 +4251,8 @@ async function gsLoadFromSheets() {
     if (!res.ok) throw new Error('서버 응답 오류: ' + res.status);
     const data = await res.json();
     if (!data.ok) throw new Error(data.msg);
-    loans  = mergeById(loans,  data.loans  || []);
-    toolDb = mergeById(toolDb, data.toolDb || []);
+    loans  = mergeByUpdated(loans,  data.loans  || []);
+    toolDb = mergeByUpdated(toolDb, data.toolDb || []);
     await Promise.all([idbPutAll('loans', loans), idbPutAll('tooldb', toolDb)]);
     updateBadges(); updateStats(); renderLed(); renderDbList(); renderDbSearch();
     updateStorageStatus();
@@ -4254,43 +4262,100 @@ async function gsLoadFromSheets() {
   }
 }
 
-// ── 데이터 병합 (id 기준, 중복 시 createdAt 최신 우선) ──
-function mergeById(local, remote) {
+// ── 데이터 병합 (updatedAt 기준 — v8: createdAt → updatedAt 으로 변경) ──
+function mergeByUpdated(local, remote) {
   const map = {};
-  // 로컬 먼저 등록
-  local.forEach(r => { if(r.id) map[r.id] = r; });
-  // 원격 데이터: 로컬에 없거나 원격이 더 최신이면 덮어쓰기
+  local.forEach(r => { if (r.id) map[r.id] = r; });
   remote.forEach(r => {
     if (!r.id) return;
     if (!map[r.id]) {
       map[r.id] = r;
     } else {
-      // createdAt 비교 (원격이 더 최신이면 원격 우선)
-      const lDate = new Date(map[r.id].createdAt || 0);
-      const rDate = new Date(r.createdAt || 0);
+      // updatedAt 비교 (수정 시각이 더 최신인 항목 우선)
+      const lDate = new Date(map[r.id].updatedAt || map[r.id].createdAt || 0);
+      const rDate = new Date(r.updatedAt || r.createdAt || 0);
       if (rDate > lDate) map[r.id] = r;
     }
   });
   return Object.values(map);
 }
+// 하위 호환 별칭
+function mergeById(local, remote) { return mergeByUpdated(local, remote); }
 
-// ── 저장 시 자동 동기화 (선택적) ──
-let _gsAutoSyncRunning = false;  // 무한루프 방지 플래그
-async function gsAutoSync() {
+// ── Push 공통 헬퍼 ──
+async function gsPushOnly() {
+  const payload = JSON.stringify({ action: 'saveAll', loans: loans, toolDb: toolDb });
+  const res = await fetch(_gsUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: payload
+  });
+  if (!res.ok) throw new Error('저장 서버 응답 오류: ' + res.status);
+  return await res.json();
+}
+
+// ── 저장 후 자동 동기화 (debounce, Pull→Merge→Push) ──
+let _gsAutoSyncRunning = false;  // 네트워크 중복 방지용
+let _saveDebounceTimer = null;   // 저장 debounce 타이머
+function gsAutoSync() {
   if (!_gsEnabled || !_gsUrl) return;
-  if (_gsAutoSyncRunning) return;   // 이미 실행 중이면 스킵
-  _gsAutoSyncRunning = true;
+  if (_saveDebounceTimer) clearTimeout(_saveDebounceTimer);
+  _saveDebounceTimer = setTimeout(async function() {
+    _saveDebounceTimer = null;
+    if (_gsAutoSyncRunning) return;
+    _gsAutoSyncRunning = true;
+    try {
+      // Pull
+      const getRes = await fetch(_gsUrl + '?action=getAll', { method: 'GET' });
+      if (getRes.ok) {
+        const remoteData = await getRes.json();
+        if (remoteData.ok) {
+          loans  = mergeByUpdated(loans,  remoteData.loans  || []);
+          toolDb = mergeByUpdated(toolDb, remoteData.toolDb || []);
+          await Promise.all([idbPutAll('loans', loans), idbPutAll('tooldb', toolDb)]);
+        }
+      }
+      // Push
+      await gsPushOnly();
+    } catch(e) {
+      console.warn('자동 동기화 실패:', e.message);
+    } finally {
+      _gsAutoSyncRunning = false;
+    }
+  }, 800);
+}
+
+// ── 삭제 후 자동 동기화 (debounce, Push만 — Pull하면 삭제 항목 되살아남) ──
+let _deleteDebounceTimer = null;  // 삭제 debounce 타이머
+function gsAutoSyncAfterDelete() {
+  if (!_gsEnabled || !_gsUrl) return;
+  if (_deleteDebounceTimer) clearTimeout(_deleteDebounceTimer);
+  _deleteDebounceTimer = setTimeout(async function() {
+    _deleteDebounceTimer = null;
+    try {
+      await gsPushOnly();
+    } catch(e) {
+      console.warn('삭제 후 동기화 실패:', e.message);
+    }
+  }, 800);
+}
+
+// ── 앱 시작 시 자동 Pull ──
+async function gsInitialPull() {
+  if (!_gsEnabled || !_gsUrl) return;
   try {
-    const payload = JSON.stringify({ action: 'saveAll', loans: loans, toolDb: toolDb });
-    await fetch(_gsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: payload
-    });
+    const res = await fetch(_gsUrl + '?action=getAll', { method: 'GET' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.ok) return;
+    loans  = mergeByUpdated(loans,  data.loans  || []);
+    toolDb = mergeByUpdated(toolDb, data.toolDb || []);
+    await Promise.all([idbPutAll('loans', loans), idbPutAll('tooldb', toolDb)]);
+    updateBadges(); updateStats(); renderLed(); renderDbList(); renderDbSearch();
+    updateStorageStatus();
   } catch(e) {
-    console.warn('자동 동기화 실패:', e.message);
-  } finally {
-    _gsAutoSyncRunning = false;
+    // 실패 시 조용히 무시 (로컬 데이터로 정상 작동)
+    console.warn('초기 Pull 실패:', e.message);
   }
 }
 
@@ -4328,17 +4393,25 @@ const gsStyle = document.createElement('style');
 gsStyle.textContent = '@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }';
 document.head.appendChild(gsStyle);
 
-// ── saveLoans 후킹: 자동 동기화 (무한루프 방지) ──
-// gsSyncAll/gsLoadFromSheets 내부에서는 idbPutAll 직접 호출하므로 루프 없음
+// ── saveLoans 후킹: 저장 시 자동 동기화 (Pull→Merge→Push) ──
+// gsSyncAll 내부에서는 idbPutAll 직접 호출하므로 루프 없음
 const _origSaveLoans = window.saveLoans;
 window.saveLoans = async function() {
   await _origSaveLoans();
-  setTimeout(gsAutoSync, 800);  // 딜레이를 늘려 연속 호출 방지
+  gsAutoSync();  // debounce 방식으로 Pull→Merge→Push
 };
 
-// ── 초기 설정 로드 ──
+// ── 초기 설정 로드 + gsInitialPull + 5분 자동 동기화 ──
 window.addEventListener('load', function() {
-  setTimeout(gsLoadSettings, 100);
+  setTimeout(function() {
+    gsLoadSettings();
+    // 앱 시작 시 자동 Pull (다른 기기 변경사항 반영)
+    setTimeout(gsInitialPull, 500);
+    // 5분 주기 자동 동기화
+    setInterval(function() {
+      if (_gsEnabled && _gsUrl && !_gsAutoSyncRunning) gsAutoSync();
+    }, 5 * 60 * 1000);
+  }, 100);
 });
 </script>
 <script>
